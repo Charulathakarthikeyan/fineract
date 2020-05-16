@@ -42,6 +42,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.orm.jpa.JpaSystemException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -91,8 +92,7 @@ public class ProductMixWritePlatformServiceJpaRepositoryImpl implements ProductM
             changes.put("restrictedProductsForMix", restrictedProductsAsMap.keySet());
             changes.put("removedProductsForMix", removedRestrictions);
             return new CommandProcessingResultBuilder().withProductId(productId).with(changes).withCommandId(command.commandId()).build();
-        } catch (final DataIntegrityViolationException dve) {
-
+        } catch (final JpaSystemException | DataIntegrityViolationException dve) {
             handleDataIntegrityIssues(dve);
             return CommandProcessingResult.empty();
         }
@@ -165,8 +165,7 @@ public class ProductMixWritePlatformServiceJpaRepositoryImpl implements ProductM
                 changes.put("removedProductsForMix", getProductIdsFromCollection(productMixesToRemove));
             }
             return new CommandProcessingResultBuilder().with(changes).withProductId(productId).withCommandId(command.commandId()).build();
-        } catch (final DataIntegrityViolationException dve) {
-
+        } catch (final JpaSystemException | DataIntegrityViolationException dve) {
             handleDataIntegrityIssues(dve);
             return CommandProcessingResult.empty();
         }
@@ -188,13 +187,13 @@ public class ProductMixWritePlatformServiceJpaRepositoryImpl implements ProductM
         return restricrtedProducts;
     }
 
-    private void handleDataIntegrityIssues(final DataIntegrityViolationException dve) {
+    private void handleDataIntegrityIssues(final Exception dve) {
         logAsErrorUnexpectedDataIntegrityException(dve);
         throw new PlatformDataIntegrityException("error.msg.product.loan.unknown.data.integrity.issue",
                 "Unknown data integrity issue with resource.");
     }
 
-    private void logAsErrorUnexpectedDataIntegrityException(final DataIntegrityViolationException dve) {
+    private void logAsErrorUnexpectedDataIntegrityException(final Throwable dve) {
         LOG.error("Error occured.", dve);
     }
 
@@ -226,8 +225,7 @@ public class ProductMixWritePlatformServiceJpaRepositoryImpl implements ProductM
             this.productMixRepository.deleteAll(existedProductMixes);
             changes.put("removedProductsForMix", getProductIdsFromCollection(existedProductMixes));
             return new CommandProcessingResultBuilder().with(changes).withProductId(productId).build();
-        } catch (final DataIntegrityViolationException dve) {
-
+        } catch (final JpaSystemException | DataIntegrityViolationException dve) {
             handleDataIntegrityIssues(dve);
             return CommandProcessingResult.empty();
         }

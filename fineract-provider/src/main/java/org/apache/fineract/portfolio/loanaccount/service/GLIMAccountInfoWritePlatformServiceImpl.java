@@ -52,21 +52,21 @@ public class GLIMAccountInfoWritePlatformServiceImpl implements GLIMAccountInfoW
         GroupLoanIndividualMonitoringAccount glimAccountInfo = GroupLoanIndividualMonitoringAccount.getInstance(accountNumber, group,
                 principalAmount, childAccountsCount, isAcceptingChild, loanStatus, applicationId);
 
-        this.glimAccountRepository.save(glimAccountInfo);
+        this.glimAccountRepository.saveAndFlush(glimAccountInfo);
 
     }
 
     @Override
     public void setIsAcceptingChild(GroupLoanIndividualMonitoringAccount glimAccount) {
         glimAccount.setIsAcceptingChild(true);
-        glimAccountRepository.save(glimAccount);
+        glimAccountRepository.saveAndFlush(glimAccount);
 
     }
 
     @Override
     public void resetIsAcceptingChild(GroupLoanIndividualMonitoringAccount glimAccount) {
         glimAccount.setIsAcceptingChild(false);
-        glimAccountRepository.save(glimAccount);
+        glimAccountRepository.saveAndFlush(glimAccount);
 
     }
 
@@ -74,7 +74,7 @@ public class GLIMAccountInfoWritePlatformServiceImpl implements GLIMAccountInfoW
     public void incrementChildAccountCount(GroupLoanIndividualMonitoringAccount glimAccount) {
         long count = glimAccount.getChildAccountsCount();
         glimAccount.setChildAccountsCount(count + 1);
-        glimAccountRepository.save(glimAccount);
+        glimAccountRepository.saveAndFlush(glimAccount);
 
     }
 

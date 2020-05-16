@@ -21,6 +21,7 @@ package org.apache.fineract.spm.service;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import javax.persistence.EntityExistsException;
 import javax.persistence.PersistenceException;
 import org.apache.fineract.infrastructure.core.exception.PlatformDataIntegrityException;
 import org.apache.fineract.infrastructure.core.service.DateUtils;
@@ -29,7 +30,6 @@ import org.apache.fineract.spm.domain.Survey;
 import org.apache.fineract.spm.domain.SurveyValidator;
 import org.apache.fineract.spm.exception.SurveyNotFoundException;
 import org.apache.fineract.spm.repository.SurveyRepository;
-import org.apache.openjpa.persistence.EntityExistsException;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -90,9 +90,7 @@ public class SpmService {
             this.surveyRepository.saveAndFlush(survey);
         } catch (final EntityExistsException dve) {
             handleDataIntegrityIssues(dve, dve, survey.getKey());
-        } catch (final DataIntegrityViolationException dve) {
-            handleDataIntegrityIssues(dve.getMostSpecificCause(), dve, survey.getKey());
-        } catch (final JpaSystemException dve) {
+        } catch (final JpaSystemException | DataIntegrityViolationException dve) {
             handleDataIntegrityIssues(dve.getMostSpecificCause(), dve, survey.getKey());
         } catch (final PersistenceException dve) {
             handleDataIntegrityIssues(dve, dve, survey.getKey());
@@ -106,9 +104,7 @@ public class SpmService {
             this.surveyRepository.saveAndFlush(survey);
         } catch (final EntityExistsException dve) {
             handleDataIntegrityIssues(dve, dve, survey.getKey());
-        } catch (final DataIntegrityViolationException dve) {
-            handleDataIntegrityIssues(dve.getMostSpecificCause(), dve, survey.getKey());
-        } catch (final JpaSystemException dve) {
+        } catch (final JpaSystemException | DataIntegrityViolationException dve) {
             handleDataIntegrityIssues(dve.getMostSpecificCause(), dve, survey.getKey());
         } catch (final PersistenceException dve) {
             handleDataIntegrityIssues(dve, dve, survey.getKey());

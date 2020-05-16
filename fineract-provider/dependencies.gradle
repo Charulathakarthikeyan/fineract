@@ -85,11 +85,7 @@ dependencies {
         exclude group: 'org.apache.geronimo.specs'
     }
     implementation ('org.springframework.boot:spring-boot-starter-data-jpa') {
-        exclude group: 'org.hibernate'
-    }
-    implementation ('org.apache.openjpa:openjpa') {
-        exclude group: 'org.eclipse.persistence'
-        exclude group: 'org.apache.geronimo.specs'
+        exclude group: "org.hibernate"
     }
     implementation ('org.quartz-scheduler:quartz') {
         exclude group: 'com.zaxxer', module: 'HikariCP-java7'
@@ -102,6 +98,9 @@ dependencies {
     }
     implementation ('org.ehcache:ehcache') {
         exclude group: 'org.glassfish.jaxb', module: 'jaxb-runtime'
+    }
+    implementation ('org.eclipse.persistence:org.eclipse.persistence.jpa') {
+        exclude group: 'org.eclipse.persistence', module: 'jakarta.persistence'
     }
 
     // runtimeOnly dependencies are things that Fineract code has no direct compile time dependency on, but which must be present at run-time

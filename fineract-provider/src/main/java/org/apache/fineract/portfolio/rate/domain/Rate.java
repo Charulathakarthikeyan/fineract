@@ -45,7 +45,7 @@ public class Rate extends AbstractAuditableCustom {
     @Column(name = "name", length = 250, unique = true)
     private String name;
 
-    @Column(name = "percentage", scale = 10, precision = 2, nullable = false)
+    @Column(name = "percentage", scale = 2, precision = 10, nullable = false)
     private BigDecimal percentage;
 
     @Column(name = "product_apply", length = 100)

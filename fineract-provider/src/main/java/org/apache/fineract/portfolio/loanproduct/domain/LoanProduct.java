@@ -44,6 +44,7 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.fineract.accounting.common.AccountingRuleType;
@@ -183,7 +184,7 @@ public class LoanProduct extends AbstractPersistableCustom {
     @Column(name = "can_use_for_topup", nullable = false)
     private boolean canUseForTopup = false;
 
-    @Column(name = "is_equal_amortization", nullable = false)
+    @Transient
     private boolean isEqualAmortization = false;
 
     public static LoanProduct assembleFromJson(final Fund fund, final LoanTransactionProcessingStrategy loanTransactionProcessingStrategy,

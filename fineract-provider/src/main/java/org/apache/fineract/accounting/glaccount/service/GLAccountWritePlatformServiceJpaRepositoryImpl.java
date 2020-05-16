@@ -51,6 +51,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.orm.jpa.JpaSystemException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -108,8 +109,9 @@ public class GLAccountWritePlatformServiceJpaRepositoryImpl implements GLAccount
             this.glAccountRepository.save(glAccount);
 
             return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withEntityId(glAccount.getId()).build();
-        } catch (final DataIntegrityViolationException dve) {
-            handleGLAccountDataIntegrityIssues(command, dve);
+        } catch (final JpaSystemException | DataIntegrityViolationException dve) {
+            final Throwable throwable = dve.getMostSpecificCause();
+            handleGLAccountDataIntegrityIssues(command, throwable, dve);
             return CommandProcessingResult.empty();
         }
     }
@@ -169,8 +171,9 @@ public class GLAccountWritePlatformServiceJpaRepositoryImpl implements GLAccount
 
             return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withEntityId(glAccount.getId()).with(changesOnly)
                     .build();
-        } catch (final DataIntegrityViolationException dve) {
-            handleGLAccountDataIntegrityIssues(command, dve);
+        } catch (final JpaSystemException | DataIntegrityViolationException dve) {
+            final Throwable throwable = dve.getMostSpecificCause();
+            handleGLAccountDataIntegrityIssues(command, throwable, dve);
             return CommandProcessingResult.empty();
         }
     }
@@ -229,16 +232,15 @@ public class GLAccountWritePlatformServiceJpaRepositoryImpl implements GLAccount
      * @param command
      * @param dve
      */
-    private void handleGLAccountDataIntegrityIssues(final JsonCommand command, final DataIntegrityViolationException dve) {
-        final Throwable realCause = dve.getMostSpecificCause();
-        if (realCause.getMessage().contains("acc_gl_code")) {
+    private void handleGLAccountDataIntegrityIssues(final JsonCommand command, final Throwable throwable, final Exception dve) {
+        if (throwable.getMessage().contains("acc_gl_code")) {
             final String glCode = command.stringValueOfParameterNamed(GLAccountJsonInputParams.GL_CODE.getValue());
             throw new GLAccountDuplicateException(glCode);
         }
 
         LOG.error("Error occured.", dve);
         throw new PlatformDataIntegrityException("error.msg.glAccount.unknown.data.integrity.issue",
-                "Unknown data integrity issue with resource GL Account: " + realCause.getMessage());
+                "Unknown data integrity issue with resource GL Account: " + throwable.getMessage());
     }
 
     private CodeValue retrieveTagId(final Long tagId, final GLAccountType accountType) {

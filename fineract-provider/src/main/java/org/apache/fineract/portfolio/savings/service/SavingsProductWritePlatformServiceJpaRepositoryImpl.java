@@ -116,7 +116,7 @@ public class SavingsProductWritePlatformServiceJpaRepositoryImpl implements Savi
 
             final SavingsProduct product = this.savingsProductAssembler.assemble(command);
 
-            this.savingProductRepository.save(product);
+            this.savingProductRepository.saveAndFlush(product);
 
             // save accounting mappings
             this.accountMappingWritePlatformService.createSavingProductToGLAccountMapping(product.getId(), command,

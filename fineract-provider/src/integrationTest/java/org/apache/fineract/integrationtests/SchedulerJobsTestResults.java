@@ -162,6 +162,7 @@ public class SchedulerJobsTestResults {
 
     }
 
+    @Disabled // FINERACT-1048
     @Test
     public void testInterestPostingForSavingsJobOutcome() throws InterruptedException {
         this.savingsAccountHelper = new SavingsAccountHelper(requestSpec, responseSpec);
@@ -265,6 +266,7 @@ public class SchedulerJobsTestResults {
 
     }
 
+    @Disabled // FINERACT-1048
     @Test
     public void testApplyHolidaysToLoansJobOutcome() throws InterruptedException {
         this.schedulerJobHelper = new SchedulerJobHelper(requestSpec);
@@ -384,6 +386,7 @@ public class SchedulerJobsTestResults {
                 "Verifying the Balance after running Pay due Savings Charges");
     }
 
+    @Disabled // FINERACT-1048
     @Test
     public void testUpdateAccountingRunningBalancesJobOutcome() throws InterruptedException {
         this.savingsAccountHelper = new SavingsAccountHelper(requestSpec, responseSpec);
@@ -526,7 +529,7 @@ public class SchedulerJobsTestResults {
 
     // Invalid test case as it won't affect summary (Loan summary is properly
     // updated before running this job)
-    @Disabled
+    @Disabled // FINERACT-1048
     @Test
     public void testUpdateLoanSummaryJobOutcome() throws InterruptedException {
         this.schedulerJobHelper = new SchedulerJobHelper(requestSpec);
@@ -582,6 +585,7 @@ public class SchedulerJobsTestResults {
 
     }
 
+    @Disabled // FINERACT-1048
     @Test
     public void testExecuteStandingInstructionsJobOutcome() throws InterruptedException {
         this.schedulerJobHelper = new SchedulerJobHelper(requestSpec);
@@ -818,6 +822,7 @@ public class SchedulerJobsTestResults {
         Assertions.assertTrue(isNPAAfter);
     }
 
+    @Disabled // FINERACT-1048
     @Test
     public void testInterestTransferForSavings() throws InterruptedException {
         this.savingsAccountHelper = new SavingsAccountHelper(requestSpec, responseSpec);

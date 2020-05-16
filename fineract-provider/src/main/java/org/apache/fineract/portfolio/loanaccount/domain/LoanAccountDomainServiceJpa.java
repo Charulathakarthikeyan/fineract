@@ -76,6 +76,7 @@ import org.joda.time.LocalDate;
 import org.joda.time.LocalDateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.orm.jpa.JpaSystemException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -209,7 +210,7 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
 
         if (StringUtils.isNotBlank(noteText)) {
             final Note note = Note.loanTransactionNote(loan, newRepaymentTransaction, noteText);
-            this.noteRepository.save(note);
+            this.noteRepository.saveAndFlush(note);
         }
 
         postJournalEntries(loan, existingTransactionIds, existingReversedTransactionIds, isAccountTransfer, isLoanToLoanTransfer);
@@ -231,8 +232,8 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
 
     private void saveLoanTransactionWithDataIntegrityViolationChecks(LoanTransaction newRepaymentTransaction) {
         try {
-            this.loanTransactionRepository.save(newRepaymentTransaction);
-        } catch (DataIntegrityViolationException e) {
+            this.loanTransactionRepository.saveAndFlush(newRepaymentTransaction);
+        } catch (final JpaSystemException | DataIntegrityViolationException e) {
             final Throwable realCause = e.getCause();
             final List<ApiParameterError> dataValidationErrors = new ArrayList<>();
             final DataValidatorBuilder baseDataValidator = new DataValidatorBuilder(dataValidationErrors).resource("loan.transaction");
@@ -252,11 +253,11 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
             List<LoanRepaymentScheduleInstallment> installments = loan.getRepaymentScheduleInstallments();
             for (LoanRepaymentScheduleInstallment installment : installments) {
                 if (installment.getId() == null) {
-                    this.repaymentScheduleInstallmentRepository.save(installment);
+                    this.repaymentScheduleInstallmentRepository.saveAndFlush(installment);
                 }
             }
             this.loanRepositoryWrapper.saveAndFlush(loan);
-        } catch (final DataIntegrityViolationException e) {
+        } catch (final JpaSystemException | DataIntegrityViolationException e) {
             final Throwable realCause = e.getCause();
             final List<ApiParameterError> dataValidationErrors = new ArrayList<>();
             final DataValidatorBuilder baseDataValidator = new DataValidatorBuilder(dataValidationErrors).resource("loan.transaction");
@@ -276,11 +277,11 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
             List<LoanRepaymentScheduleInstallment> installments = loan.getRepaymentScheduleInstallments();
             for (LoanRepaymentScheduleInstallment installment : installments) {
                 if (installment.getId() == null) {
-                    this.repaymentScheduleInstallmentRepository.save(installment);
+                    this.repaymentScheduleInstallmentRepository.saveAndFlush(installment);
                 }
             }
-            this.loanRepositoryWrapper.save(loan);
-        } catch (final DataIntegrityViolationException e) {
+            this.loanRepositoryWrapper.saveAndFlush(loan);
+        } catch (final JpaSystemException | DataIntegrityViolationException e) {
             final Throwable realCause = e.getCause();
             final List<ApiParameterError> dataValidationErrors = new ArrayList<>();
             final DataValidatorBuilder baseDataValidator = new DataValidatorBuilder(dataValidationErrors).resource("loan.transaction");
@@ -333,7 +334,7 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
 
         if (StringUtils.isNotBlank(noteText)) {
             final Note note = Note.loanTransactionNote(loan, newPaymentTransaction, noteText);
-            this.noteRepository.save(note);
+            this.noteRepository.saveAndFlush(note);
         }
 
         postJournalEntries(loan, existingTransactionIds, existingReversedTransactionIds, isAccountTransfer);
@@ -406,11 +407,11 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
                 allowTransactionsOnHoliday, holidays, workingDays, allowTransactionsOnNonWorkingDay);
 
         saveLoanTransactionWithDataIntegrityViolationChecks(newRefundTransaction);
-        this.loanRepositoryWrapper.save(loan);
+        this.loanRepositoryWrapper.saveAndFlush(loan);
 
         if (StringUtils.isNotBlank(noteText)) {
             final Note note = Note.loanTransactionNote(loan, newRefundTransaction, noteText);
-            this.noteRepository.save(note);
+            this.noteRepository.saveAndFlush(note);
         }
 
         postJournalEntries(loan, existingTransactionIds, existingReversedTransactionIds, isAccountTransfer);
@@ -449,7 +450,7 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
 
         if (StringUtils.isNotBlank(noteText)) {
             final Note note = Note.loanTransactionNote(loan, disbursementTransaction, noteText);
-            this.noteRepository.save(note);
+            this.noteRepository.saveAndFlush(note);
         }
 
         postJournalEntries(loan, existingTransactionIds, existingReversedTransactionIds, isAccountTransfer, isLoanToLoanTransfer);
@@ -562,7 +563,7 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
         final AccountTransferTransaction transferTransaction = this.accountTransferRepository.findByToLoanTransactionId(loanTransactionId);
         if (transferTransaction != null) {
             transferTransaction.updateToLoanTransaction(newLoanTransaction);
-            this.accountTransferRepository.save(transferTransaction);
+            this.accountTransferRepository.saveAndFlush(transferTransaction);
         }
     }
 
@@ -597,12 +598,12 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
         loan.makeRefundForActiveLoan(newRefundTransaction, defaultLoanLifecycleStateMachine(), existingTransactionIds,
                 existingReversedTransactionIds, allowTransactionsOnHoliday, holidays, workingDays, allowTransactionsOnNonWorkingDay);
 
-        this.loanTransactionRepository.save(newRefundTransaction);
-        this.loanRepositoryWrapper.save(loan);
+        this.loanTransactionRepository.saveAndFlush(newRefundTransaction);
+        this.loanRepositoryWrapper.saveAndFlush(loan);
 
         if (StringUtils.isNotBlank(noteText)) {
             final Note note = Note.loanTransactionNote(loan, newRefundTransaction, noteText);
-            this.noteRepository.save(note);
+            this.noteRepository.saveAndFlush(note);
         }
 
         postJournalEntries(loan, existingTransactionIds, existingReversedTransactionIds, false);
@@ -714,7 +715,7 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
         if (StringUtils.isNotBlank(noteText)) {
             changes.put("note", noteText);
             final Note note = Note.loanNote(loan, noteText);
-            this.noteRepository.save(note);
+            this.noteRepository.saveAndFlush(note);
         }
 
         postJournalEntries(loan, existingTransactionIds, existingReversedTransactionIds, false);
@@ -741,7 +742,7 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
             if (!accountTransferStandingInstructions.isEmpty()) {
                 for (AccountTransferStandingInstruction accountTransferStandingInstruction : accountTransferStandingInstructions) {
                     accountTransferStandingInstruction.updateStatus(StandingInstructionStatus.DISABLED.getValue());
-                    this.standingInstructionRepository.save(accountTransferStandingInstruction);
+                    this.standingInstructionRepository.saveAndFlush(accountTransferStandingInstruction);
                 }
             }
         }

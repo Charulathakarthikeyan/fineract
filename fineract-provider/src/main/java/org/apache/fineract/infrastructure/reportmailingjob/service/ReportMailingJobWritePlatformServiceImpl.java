@@ -68,6 +68,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.orm.jpa.JpaSystemException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -127,8 +128,8 @@ public class ReportMailingJobWritePlatformServiceImpl implements ReportMailingJo
 
             return new CommandProcessingResultBuilder().withCommandId(jsonCommand.commandId()).withEntityId(reportMailingJob.getId())
                     .build();
-        } catch (final DataIntegrityViolationException dve) {
-            handleDataIntegrityIssues(jsonCommand, dve);
+        } catch (final JpaSystemException | DataIntegrityViolationException dve) {
+            handleDataIntegrityIssues(jsonCommand, dve.getMostSpecificCause(), dve);
 
             return CommandProcessingResult.empty();
         }
@@ -217,8 +218,8 @@ public class ReportMailingJobWritePlatformServiceImpl implements ReportMailingJo
 
             return new CommandProcessingResultBuilder().withCommandId(jsonCommand.commandId()).withEntityId(reportMailingJob.getId())
                     .with(changes).build();
-        } catch (final DataIntegrityViolationException dve) {
-            handleDataIntegrityIssues(jsonCommand, dve);
+        } catch (final JpaSystemException | DataIntegrityViolationException dve) {
+            handleDataIntegrityIssues(jsonCommand, dve.getMostSpecificCause(), dve);
 
             return CommandProcessingResult.empty();
         }
@@ -407,10 +408,9 @@ public class ReportMailingJobWritePlatformServiceImpl implements ReportMailingJo
      *            -- data integrity exception object
      *
      **/
-    private void handleDataIntegrityIssues(final JsonCommand jsonCommand, final DataIntegrityViolationException dve) {
-        final Throwable realCause = dve.getMostSpecificCause();
+    private void handleDataIntegrityIssues(final JsonCommand jsonCommand, final Throwable throwable, final Exception dve) {
 
-        if (realCause.getMessage().contains(ReportMailingJobConstants.NAME_PARAM_NAME)) {
+        if (throwable.getMessage().contains(ReportMailingJobConstants.NAME_PARAM_NAME)) {
             final String name = jsonCommand.stringValueOfParameterNamed(ReportMailingJobConstants.NAME_PARAM_NAME);
             throw new PlatformDataIntegrityException("error.msg.report.mailing.job.duplicate.name",
                     "Report mailing job with name `" + name + "` already exists", ReportMailingJobConstants.NAME_PARAM_NAME, name);
@@ -419,7 +419,7 @@ public class ReportMailingJobWritePlatformServiceImpl implements ReportMailingJo
         LOG.error("Error occured.", dve);
 
         throw new PlatformDataIntegrityException("error.msg.charge.unknown.data.integrity.issue",
-                "Unknown data integrity issue with resource: " + realCause.getMessage());
+                "Unknown data integrity issue with resource: " + throwable.getMessage());
     }
 
     /**

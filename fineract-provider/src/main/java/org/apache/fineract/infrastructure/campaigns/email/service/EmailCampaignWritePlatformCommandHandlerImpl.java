@@ -93,6 +93,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.orm.jpa.JpaSystemException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -206,8 +207,8 @@ public class EmailCampaignWritePlatformCommandHandlerImpl implements EmailCampai
                     .withEntityId(resourceId) //
                     .with(changes) //
                     .build();
-        } catch (final DataIntegrityViolationException dve) {
-            handleDataIntegrityIssues(command, dve);
+        } catch (final JpaSystemException | DataIntegrityViolationException dve) {
+            handleDataIntegrityIssues(command, dve.getMostSpecificCause());
             return CommandProcessingResult.empty();
         }
 
@@ -541,12 +542,9 @@ public class EmailCampaignWritePlatformCommandHandlerImpl implements EmailCampai
 
     }
 
-    private void handleDataIntegrityIssues(@SuppressWarnings("unused") final JsonCommand command,
-            final DataIntegrityViolationException dve) {
-        final Throwable realCause = dve.getMostSpecificCause();
-
+    private void handleDataIntegrityIssues(@SuppressWarnings("unused") final JsonCommand command, final Throwable throwable) {
         throw new PlatformDataIntegrityException("error.msg.email.campaign.unknown.data.integrity.issue",
-                "Unknown data integrity issue with resource: " + realCause.getMessage());
+                "Unknown data integrity issue with resource: " + throwable.getMessage());
     }
 
     private LocalDateTime tenantDateTime() {

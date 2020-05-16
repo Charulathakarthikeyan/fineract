@@ -51,6 +51,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.orm.jpa.JpaSystemException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -83,17 +84,16 @@ public class AccountingRuleWritePlatformServiceJpaRepositoryImpl implements Acco
      * @param command
      * @param dve
      */
-    private void handleAccountingRuleIntegrityIssues(final JsonCommand command, final DataIntegrityViolationException dve) {
-        final Throwable realCause = dve.getMostSpecificCause();
-        if (realCause.getMessage().contains("accounting_rule_name_unique")) {
+    private void handleAccountingRuleIntegrityIssues(final JsonCommand command, final Throwable throwable, final Exception dve) {
+        if (throwable.getMessage().contains("accounting_rule_name_unique")) {
             throw new AccountingRuleDuplicateException(command.stringValueOfParameterNamed(AccountingRuleJsonInputParams.NAME.getValue()));
-        } else if (realCause.getMessage().contains("UNIQUE_ACCOUNT_RULE_TAGS")) {
+        } else if (throwable.getMessage().contains("UNIQUE_ACCOUNT_RULE_TAGS")) {
             throw new AccountingRuleDuplicateException();
         }
 
         LOG.error("Error occured.", dve);
         throw new PlatformDataIntegrityException("error.msg.accounting.rule.unknown.data.integrity.issue",
-                "Unknown data integrity issue with resource Accounting Rule: " + realCause.getMessage());
+                "Unknown data integrity issue with resource Accounting Rule: " + throwable.getMessage());
     }
 
     @Transactional
@@ -114,8 +114,9 @@ public class AccountingRuleWritePlatformServiceJpaRepositoryImpl implements Acco
             this.accountingRuleRepository.saveAndFlush(accountingRule);
             return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withOfficeId(officeId)
                     .withEntityId(accountingRule.getId()).build();
-        } catch (final DataIntegrityViolationException dve) {
-            handleAccountingRuleIntegrityIssues(command, dve);
+        } catch (final JpaSystemException | DataIntegrityViolationException dve) {
+            final Throwable throwable = dve.getMostSpecificCause();
+            handleAccountingRuleIntegrityIssues(command, throwable, dve);
             return CommandProcessingResult.empty();
         }
     }
@@ -280,8 +281,9 @@ public class AccountingRuleWritePlatformServiceJpaRepositoryImpl implements Acco
 
             return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withEntityId(accountingRule.getId())
                     .with(changesOnly).build();
-        } catch (final DataIntegrityViolationException dve) {
-            handleAccountingRuleIntegrityIssues(command, dve);
+        } catch (final JpaSystemException | DataIntegrityViolationException dve) {
+            final Throwable throwable = dve.getMostSpecificCause();
+            handleAccountingRuleIntegrityIssues(command, throwable, dve);
             return CommandProcessingResult.empty();
         }
 

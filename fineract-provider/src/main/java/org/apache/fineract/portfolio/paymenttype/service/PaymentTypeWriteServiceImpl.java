@@ -30,6 +30,7 @@ import org.apache.fineract.portfolio.paymenttype.domain.PaymentTypeRepository;
 import org.apache.fineract.portfolio.paymenttype.domain.PaymentTypeRepositoryWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.orm.jpa.JpaSystemException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -57,7 +58,7 @@ public class PaymentTypeWriteServiceImpl implements PaymentTypeWriteService {
         Long position = command.longValueOfParameterNamed(PaymentTypeApiResourceConstants.POSITION);
 
         PaymentType newPaymentType = PaymentType.create(name, description, isCashPayment, position);
-        this.repository.save(newPaymentType);
+        this.repository.saveAndFlush(newPaymentType);
         return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withEntityId(newPaymentType.getId()).build();
     }
 
@@ -69,7 +70,7 @@ public class PaymentTypeWriteServiceImpl implements PaymentTypeWriteService {
         final Map<String, Object> changes = paymentType.update(command);
 
         if (!changes.isEmpty()) {
-            this.repository.save(paymentType);
+            this.repository.saveAndFlush(paymentType);
         }
 
         return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withEntityId(command.entityId()).build();
@@ -81,19 +82,19 @@ public class PaymentTypeWriteServiceImpl implements PaymentTypeWriteService {
         try {
             this.repository.delete(paymentType);
             this.repository.flush();
-        } catch (final DataIntegrityViolationException e) {
-            handleDataIntegrityIssues(e);
+        } catch (final JpaSystemException | DataIntegrityViolationException e) {
+            final Throwable throwable = e.getMostSpecificCause();
+            handleDataIntegrityIssues(throwable);
         }
         return new CommandProcessingResultBuilder().withEntityId(paymentType.getId()).build();
     }
 
-    private void handleDataIntegrityIssues(final DataIntegrityViolationException dve) {
+    private void handleDataIntegrityIssues(final Throwable throwable) {
 
-        final Throwable realCause = dve.getMostSpecificCause();
-        if (realCause.getMessage().contains("acc_product_mapping")) {
+        if (throwable.getMessage().contains("acc_product_mapping")) {
             throw new PlatformDataIntegrityException("error.msg.payment.type.association.exist",
                     "cannot.delete.payment.type.with.association");
-        } else if (realCause.getMessage().contains("payment_type_id")) {
+        } else if (throwable.getMessage().contains("payment_type_id")) {
             throw new PlatformDataIntegrityException("error.msg.payment.type.association.exist",
                     "cannot.delete.payment.type.with.association");
         }

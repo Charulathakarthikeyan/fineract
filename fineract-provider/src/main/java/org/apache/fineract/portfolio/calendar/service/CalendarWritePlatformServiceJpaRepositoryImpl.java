@@ -153,10 +153,10 @@ public class CalendarWritePlatformServiceJpaRepositoryImpl implements CalendarWr
             throw new PlatformApiDataValidationException(dataValidationErrors);
         }
 
-        this.calendarRepository.save(newCalendar);
+        this.calendarRepository.saveAndFlush(newCalendar);
 
         final CalendarInstance newCalendarInstance = CalendarInstance.from(newCalendar, entityId, entityTypeId);
-        this.calendarInstanceRepository.save(newCalendarInstance);
+        this.calendarInstanceRepository.saveAndFlush(newCalendarInstance);
 
         return new CommandProcessingResultBuilder() //
                 .withCommandId(command.commandId()) //
@@ -284,7 +284,7 @@ public class CalendarWritePlatformServiceJpaRepositoryImpl implements CalendarWr
                 final Date endDate = presentMeetingDate.minusDays(1).toDate();
                 calendarHistory.updateEndDate(endDate);
             }
-            this.calendarHistoryRepository.save(calendarHistory);
+            this.calendarHistoryRepository.saveAndFlush(calendarHistory);
             Set<CalendarHistory> history = calendarForUpdate.getCalendarHistory();
             history.add(calendarHistory);
             calendarForUpdate.updateCalendarHistory(history);
@@ -324,7 +324,7 @@ public class CalendarWritePlatformServiceJpaRepositoryImpl implements CalendarWr
                 .orElseThrow(() -> new CalendarNotFoundException(calendarId));
 
         final CalendarInstance newCalendarInstance = new CalendarInstance(calendarForUpdate, entityId, entityTypeId);
-        this.calendarInstanceRepository.save(newCalendarInstance);
+        this.calendarInstanceRepository.saveAndFlush(newCalendarInstance);
 
         return new CommandProcessingResultBuilder().withCommandId(null).withEntityId(calendarForUpdate.getId()).build();
     }

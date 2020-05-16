@@ -42,6 +42,10 @@ public class ShareProductDividentPayOutDetailsRepositoryWrapper {
         this.shareProductDividentPayOutDetailsRepository.save(shareProductDividendPayOutDetails);
     }
 
+    public void saveAndFlush(final ShareProductDividendPayOutDetails shareProductDividendPayOutDetails) {
+        this.shareProductDividentPayOutDetailsRepository.saveAndFlush(shareProductDividendPayOutDetails);
+    }
+
     public void delete(final ShareProductDividendPayOutDetails shareProductDividendPayOutDetails) {
         this.shareProductDividentPayOutDetailsRepository.delete(shareProductDividendPayOutDetails);
     }

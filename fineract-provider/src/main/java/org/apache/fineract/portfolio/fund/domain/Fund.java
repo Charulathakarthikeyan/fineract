@@ -33,10 +33,10 @@ import org.apache.fineract.infrastructure.core.domain.AbstractPersistableCustom;
         @UniqueConstraint(columnNames = { "external_id" }, name = "fund_externalid_org") })
 public class Fund extends AbstractPersistableCustom {
 
-    @Column(name = "name")
+    @Column(name = "name", unique = true)
     private String name;
 
-    @Column(name = "external_id", length = 100)
+    @Column(name = "external_id", length = 100, unique = true)
     private String externalId;
 
     public static Fund fromJson(final JsonCommand command) {

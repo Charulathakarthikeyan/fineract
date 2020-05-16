@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.orm.jpa.JpaSystemException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -67,10 +68,10 @@ public class CodeWritePlatformServiceJpaRepositoryImpl implements CodeWritePlatf
             this.fromApiJsonDeserializer.validateForCreate(command.json());
 
             final Code code = Code.fromJson(command);
-            this.codeRepository.save(code);
+            this.codeRepository.saveAndFlush(code);
 
             return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withEntityId(code.getId()).build();
-        } catch (final DataIntegrityViolationException dve) {
+        } catch (final JpaSystemException | DataIntegrityViolationException dve) {
             handleCodeDataIntegrityIssues(command, dve.getMostSpecificCause(), dve);
             return CommandProcessingResult.empty();
         } catch (final PersistenceException ee) {
@@ -94,7 +95,7 @@ public class CodeWritePlatformServiceJpaRepositoryImpl implements CodeWritePlatf
             final Map<String, Object> changes = code.update(command);
 
             if (!changes.isEmpty()) {
-                this.codeRepository.save(code);
+                this.codeRepository.saveAndFlush(code);
             }
 
             return new CommandProcessingResultBuilder() //
@@ -102,7 +103,7 @@ public class CodeWritePlatformServiceJpaRepositoryImpl implements CodeWritePlatf
                     .withEntityId(codeId) //
                     .with(changes) //
                     .build();
-        } catch (final DataIntegrityViolationException dve) {
+        } catch (final JpaSystemException | DataIntegrityViolationException dve) {
             handleCodeDataIntegrityIssues(command, dve.getMostSpecificCause(), dve);
             return CommandProcessingResult.empty();
         } catch (final PersistenceException ee) {
@@ -127,7 +128,7 @@ public class CodeWritePlatformServiceJpaRepositoryImpl implements CodeWritePlatf
         try {
             this.codeRepository.delete(code);
             this.codeRepository.flush();
-        } catch (final DataIntegrityViolationException e) {
+        } catch (final JpaSystemException | DataIntegrityViolationException e) {
             throw new PlatformDataIntegrityException("error.msg.cund.unknown.data.integrity.issue",
                     "Unknown data integrity issue with resource: " + e.getMostSpecificCause());
         }

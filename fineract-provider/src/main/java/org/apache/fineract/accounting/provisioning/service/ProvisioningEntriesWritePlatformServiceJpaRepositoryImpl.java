@@ -63,6 +63,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.orm.jpa.JpaSystemException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -126,7 +127,7 @@ public class ProvisioningEntriesWritePlatformServiceJpaRepositoryImpl implements
             requestedEntry.setJournalEntryCreated(Boolean.TRUE);
         }
 
-        this.provisioningEntryRepository.save(requestedEntry);
+        this.provisioningEntryRepository.saveAndFlush(requestedEntry);
         this.journalEntryWritePlatformService.createProvisioningJournalEntries(requestedEntry);
     }
 
@@ -168,8 +169,8 @@ public class ProvisioningEntriesWritePlatformServiceJpaRepositoryImpl implements
             createProvsioningEntry(currentDate, addJournalEntries);
         } catch (ProvisioningEntryAlreadyCreatedException peace) {
             LOG.error("{}", peace.getDefaultUserMessage());
-        } catch (DataIntegrityViolationException dive) {
-            LOG.error("Problem occurred in generateLoanLossProvisioningAmount function", dive);
+        } catch (final JpaSystemException | DataIntegrityViolationException dve) {
+            LOG.error("Problem occurred in generateLoanLossProvisioningAmount function", dve);
         }
     }
 
@@ -186,7 +187,7 @@ public class ProvisioningEntriesWritePlatformServiceJpaRepositoryImpl implements
             }
             ProvisioningEntry requestedEntry = createProvsioningEntry(createdDate, addJournalEntries);
             return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withEntityId(requestedEntry.getId()).build();
-        } catch (DataIntegrityViolationException dve) {
+        } catch (JpaSystemException | DataIntegrityViolationException dve) {
             return CommandProcessingResult.empty();
         }
     }
@@ -208,7 +209,7 @@ public class ProvisioningEntriesWritePlatformServiceJpaRepositoryImpl implements
                     .retrieveExistingProvisioningIdDateWithJournals();
             revertAndAddJournalEntries(exisProvisioningEntryData, requestedEntry);
         } else {
-            this.provisioningEntryRepository.save(requestedEntry);
+            this.provisioningEntryRepository.saveAndFlush(requestedEntry);
         }
         return requestedEntry;
     }
@@ -218,10 +219,10 @@ public class ProvisioningEntriesWritePlatformServiceJpaRepositoryImpl implements
         ProvisioningEntry requestedEntry = this.provisioningEntryRepository.findById(provisioningEntryId)
                 .orElseThrow(() -> new ProvisioningEntryNotfoundException(provisioningEntryId));
         requestedEntry.getLoanProductProvisioningEntries().clear();
-        this.provisioningEntryRepository.save(requestedEntry);
+        this.provisioningEntryRepository.saveAndFlush(requestedEntry);
         Collection<LoanProductProvisioningEntry> entries = generateLoanProvisioningEntry(requestedEntry, requestedEntry.getCreatedDate());
         requestedEntry.setProvisioningEntries(entries);
-        this.provisioningEntryRepository.save(requestedEntry);
+        this.provisioningEntryRepository.saveAndFlush(requestedEntry);
         return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withEntityId(requestedEntry.getId()).build();
     }
 

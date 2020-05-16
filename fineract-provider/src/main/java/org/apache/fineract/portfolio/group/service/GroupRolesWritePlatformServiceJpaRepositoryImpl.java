@@ -39,6 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.orm.jpa.JpaSystemException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -88,17 +89,15 @@ public class GroupRolesWritePlatformServiceJpaRepositoryImpl implements GroupRol
             return new CommandProcessingResultBuilder().withClientId(client.getId()).withGroupId(group.getId())
                     .withEntityId(groupRole.getId()).build();
 
-        } catch (final DataIntegrityViolationException dve) {
-            handleGroupDataIntegrityIssues(command, dve);
+        } catch (final JpaSystemException | DataIntegrityViolationException dve) {
+            handleGroupDataIntegrityIssues(command, dve.getMostSpecificCause(), dve);
             return CommandProcessingResult.empty();
         }
 
     }
 
-    private void handleGroupDataIntegrityIssues(final JsonCommand command, final DataIntegrityViolationException dve) {
-        final Throwable realCause = dve.getMostSpecificCause();
-
-        if (realCause.getMessage().contains("UNIQUE_GROUP_ROLES")) {
+    private void handleGroupDataIntegrityIssues(final JsonCommand command, final Throwable throwable, final Exception dve) {
+        if (throwable.getMessage().contains("UNIQUE_GROUP_ROLES")) {
             final String clientId = command.stringValueOfParameterNamed(GroupingTypesApiConstants.clientIdParamName);
             final String roleId = command.stringValueOfParameterNamed(GroupingTypesApiConstants.roleParamName);
             final String errorMessageForUser = "Group Role with roleId `" + roleId + "`, clientId `" + clientId + "`, groupId `"
@@ -150,8 +149,8 @@ public class GroupRolesWritePlatformServiceJpaRepositoryImpl implements GroupRol
             this.groupRoleRepository.saveAndFlush(groupRole);
             return new CommandProcessingResultBuilder().with(actualChanges).withGroupId(group.getId()).withEntityId(groupRole.getId())
                     .build();
-        } catch (final DataIntegrityViolationException dve) {
-            handleGroupDataIntegrityIssues(command, dve);
+        } catch (final JpaSystemException | DataIntegrityViolationException dve) {
+            handleGroupDataIntegrityIssues(command, dve.getMostSpecificCause(), dve);
             return CommandProcessingResult.empty();
         }
 

@@ -81,6 +81,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.orm.jpa.JpaSystemException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -218,8 +219,9 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
 
             return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withOfficeId(officeId)
                     .withTransactionId(transactionId).build();
-        } catch (final DataIntegrityViolationException dve) {
-            throw handleJournalEntryDataIntegrityIssues(dve);
+        } catch (final JpaSystemException | DataIntegrityViolationException dve) {
+            final Throwable throwable = dve.getMostSpecificCause();
+            throw handleJournalEntryDataIntegrityIssues(throwable, dve);
         }
     }
 
@@ -654,11 +656,10 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
         return transactionId;
     }
 
-    private PlatformDataIntegrityException handleJournalEntryDataIntegrityIssues(final DataIntegrityViolationException dve) {
-        final Throwable realCause = dve.getMostSpecificCause();
+    private PlatformDataIntegrityException handleJournalEntryDataIntegrityIssues(final Throwable throwable, final Exception dve) {
         LOG.error("Error occured.", dve);
         return new PlatformDataIntegrityException("error.msg.glJournalEntry.unknown.data.integrity.issue",
-                "Unknown data integrity issue with resource Journal Entry: " + realCause.getMessage());
+                "Unknown data integrity issue with resource Journal Entry: " + throwable.getMessage());
     }
 
     @Transactional
@@ -709,8 +710,9 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
 
             return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withOfficeId(officeId)
                     .withTransactionId(transactionId).build();
-        } catch (final DataIntegrityViolationException dve) {
-            throw handleJournalEntryDataIntegrityIssues(dve);
+        } catch (final JpaSystemException | DataIntegrityViolationException dve) {
+            final Throwable throwable = dve.getMostSpecificCause();
+            throw handleJournalEntryDataIntegrityIssues(throwable, dve);
         }
     }
 

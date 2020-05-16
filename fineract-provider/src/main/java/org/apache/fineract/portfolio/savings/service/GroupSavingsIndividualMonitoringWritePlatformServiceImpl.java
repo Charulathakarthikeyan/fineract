@@ -51,21 +51,21 @@ public class GroupSavingsIndividualMonitoringWritePlatformServiceImpl implements
         GroupSavingsIndividualMonitoring glimAccountInfo = GroupSavingsIndividualMonitoring.getInstance(accountNumber, group, parentDeposit,
                 childAccountsCount, isAcceptingChild, loanStatus, applicationId);
 
-        return this.gsimAccountRepository.save(glimAccountInfo);
+        return this.gsimAccountRepository.saveAndFlush(glimAccountInfo);
 
     }
 
     @Override
     public void setIsAcceptingChild(GroupSavingsIndividualMonitoring glimAccount) {
         glimAccount.setIsAcceptingChild(true);
-        gsimAccountRepository.save(glimAccount);
+        gsimAccountRepository.saveAndFlush(glimAccount);
 
     }
 
     @Override
     public void resetIsAcceptingChild(GroupSavingsIndividualMonitoring glimAccount) {
         glimAccount.setIsAcceptingChild(false);
-        gsimAccountRepository.save(glimAccount);
+        gsimAccountRepository.saveAndFlush(glimAccount);
 
     }
 
@@ -73,6 +73,6 @@ public class GroupSavingsIndividualMonitoringWritePlatformServiceImpl implements
     public void incrementChildAccountCount(GroupSavingsIndividualMonitoring glimAccount) {
         long count = glimAccount.getChildAccountsCount();
         glimAccount.setChildAccountsCount(count + 1);
-        gsimAccountRepository.save(glimAccount);
+        gsimAccountRepository.saveAndFlush(glimAccount);
     }
 }

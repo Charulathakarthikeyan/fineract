@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.orm.jpa.JpaSystemException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -74,15 +75,15 @@ public class CodeValueWritePlatformServiceJpaRepositoryImpl implements CodeValue
             final Long codeId = command.entityId();
             final Code code = this.codeRepository.findById(codeId).orElseThrow(() -> new CodeNotFoundException(codeId));
             final CodeValue codeValue = CodeValue.fromJson(code, command);
-            this.codeValueRepository.save(codeValue);
+            this.codeValueRepository.saveAndFlush(codeValue);
 
             return new CommandProcessingResultBuilder() //
                     .withCommandId(command.commandId()) //
                     .withEntityId(code.getId()) //
                     .withSubEntityId(codeValue.getId())//
                     .build();
-        } catch (final DataIntegrityViolationException dve) {
-            handleCodeValueDataIntegrityIssues(command, dve);
+        } catch (final JpaSystemException | DataIntegrityViolationException dve) {
+            handleCodeValueDataIntegrityIssues(command, dve.getMostSpecificCause(), dve);
             return new CommandProcessingResultBuilder() //
                     .withCommandId(command.commandId()) //
                     .build();
@@ -92,9 +93,8 @@ public class CodeValueWritePlatformServiceJpaRepositoryImpl implements CodeValue
     /*
      * Guaranteed to throw an exception no matter what the data integrity issue is.
      */
-    private void handleCodeValueDataIntegrityIssues(final JsonCommand command, final DataIntegrityViolationException dve) {
-        final Throwable realCause = dve.getMostSpecificCause();
-        if (realCause.getMessage().contains("code_value")) {
+    private void handleCodeValueDataIntegrityIssues(final JsonCommand command, final Throwable throwable, final Exception dve) {
+        if (throwable.getMessage().contains("code_value")) {
             final String name = command.stringValueOfParameterNamed("name");
             throw new PlatformDataIntegrityException("error.msg.code.value.duplicate.label",
                     "A code value with lable '" + name + "' already exists", "name", name);
@@ -102,7 +102,7 @@ public class CodeValueWritePlatformServiceJpaRepositoryImpl implements CodeValue
 
         LOG.error("Error occured.", dve);
         throw new PlatformDataIntegrityException("error.msg.code.value.unknown.data.integrity.issue",
-                "Unknown data integrity issue with resource: " + realCause.getMessage());
+                "Unknown data integrity issue with resource: " + throwable.getMessage());
     }
 
     @Transactional
@@ -127,8 +127,8 @@ public class CodeValueWritePlatformServiceJpaRepositoryImpl implements CodeValue
                     .withEntityId(codeValueId) //
                     .with(changes) //
                     .build();
-        } catch (final DataIntegrityViolationException dve) {
-            handleCodeValueDataIntegrityIssues(command, dve);
+        } catch (final JpaSystemException | DataIntegrityViolationException dve) {
+            handleCodeValueDataIntegrityIssues(command, dve.getMostSpecificCause(), dve);
             return new CommandProcessingResultBuilder() //
                     .withCommandId(command.commandId()) //
                     .build();
@@ -157,7 +157,7 @@ public class CodeValueWritePlatformServiceJpaRepositoryImpl implements CodeValue
                     .withEntityId(codeId) //
                     .withSubEntityId(codeValueId)//
                     .build();
-        } catch (final DataIntegrityViolationException dve) {
+        } catch (final JpaSystemException | DataIntegrityViolationException dve) {
             LOG.error("Error occured.", dve);
             final Throwable realCause = dve.getMostSpecificCause();
             if (realCause.getMessage().contains("code_value")) {

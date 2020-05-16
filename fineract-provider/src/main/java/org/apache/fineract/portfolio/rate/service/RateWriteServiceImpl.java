@@ -39,6 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.orm.jpa.JpaSystemException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -77,11 +78,11 @@ public class RateWriteServiceImpl implements RateWriteService {
             }
             final Rate rate = Rate.fromJson(command, approveUser);
 
-            this.rateRepository.save(rate);
+            this.rateRepository.saveAndFlush(rate);
 
             return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withEntityId(rate.getId()).build();
 
-        } catch (final DataIntegrityViolationException dve) {
+        } catch (final JpaSystemException | DataIntegrityViolationException dve) {
             handleRateDataIntegrityIssues(command, dve.getMostSpecificCause(), dve);
             return CommandProcessingResult.empty();
         } catch (final PersistenceException dve) {
@@ -122,7 +123,7 @@ public class RateWriteServiceImpl implements RateWriteService {
                     .with(changes) //
                     .build();
 
-        } catch (final DataIntegrityViolationException dve) {
+        } catch (final JpaSystemException | DataIntegrityViolationException dve) {
             handleRateDataIntegrityIssues(command, dve.getMostSpecificCause(), dve);
             return new CommandProcessingResult((long) -1);
         } catch (final PersistenceException dve) {

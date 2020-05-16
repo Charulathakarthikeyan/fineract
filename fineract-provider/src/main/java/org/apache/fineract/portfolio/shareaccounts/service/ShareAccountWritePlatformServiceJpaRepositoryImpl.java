@@ -59,6 +59,7 @@ import org.apache.fineract.portfolio.shareproducts.domain.ShareProductRepository
 import org.joda.time.LocalDate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.orm.jpa.JpaSystemException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -112,7 +113,7 @@ public class ShareAccountWritePlatformServiceJpaRepositoryImpl implements ShareA
                     .withCommandId(jsonCommand.commandId()) //
                     .withEntityId(account.getId()) //
                     .build();
-        } catch (final DataIntegrityViolationException dve) {
+        } catch (final JpaSystemException | DataIntegrityViolationException dve) {
             handleDataIntegrityIssues(jsonCommand, dve.getMostSpecificCause(), dve);
             return CommandProcessingResult.empty();
         } catch (final PersistenceException dve) {
@@ -210,12 +211,8 @@ public class ShareAccountWritePlatformServiceJpaRepositoryImpl implements ShareA
                     .withEntityId(accountId) //
                     .with(changes) //
                     .build();
-        } catch (DataIntegrityViolationException dve) {
+        } catch (final JpaSystemException | DataIntegrityViolationException dve) {
             handleDataIntegrityIssues(jsonCommand, dve.getMostSpecificCause(), dve);
-            return CommandProcessingResult.empty();
-        } catch (final PersistenceException dve) {
-            Throwable throwable = ExceptionUtils.getRootCause(dve.getCause());
-            handleDataIntegrityIssues(jsonCommand, throwable, dve);
             return CommandProcessingResult.empty();
         }
     }
@@ -244,7 +241,7 @@ public class ShareAccountWritePlatformServiceJpaRepositoryImpl implements ShareA
                     .withEntityId(accountId) //
                     .with(changes) //
                     .build();
-        } catch (final DataIntegrityViolationException dve) {
+        } catch (final JpaSystemException | DataIntegrityViolationException dve) {
             handleDataIntegrityIssues(jsonCommand, dve.getMostSpecificCause(), dve);
             return CommandProcessingResult.empty();
         }
@@ -289,7 +286,7 @@ public class ShareAccountWritePlatformServiceJpaRepositoryImpl implements ShareA
                     .withEntityId(accountId) //
                     .with(changes) //
                     .build();
-        } catch (DataIntegrityViolationException dve) {
+        } catch (final JpaSystemException | DataIntegrityViolationException dve) {
             handleDataIntegrityIssues(jsonCommand, dve.getMostSpecificCause(), dve);
             return CommandProcessingResult.empty();
         }
@@ -323,7 +320,7 @@ public class ShareAccountWritePlatformServiceJpaRepositoryImpl implements ShareA
                     .withEntityId(accountId) //
                     .with(changes) //
                     .build();
-        } catch (DataIntegrityViolationException dve) {
+        } catch (final JpaSystemException | DataIntegrityViolationException dve) {
             handleDataIntegrityIssues(jsonCommand, dve.getMostSpecificCause(), dve);
             return CommandProcessingResult.empty();
         }
@@ -360,7 +357,7 @@ public class ShareAccountWritePlatformServiceJpaRepositoryImpl implements ShareA
                     .withEntityId(accountId) //
                     .with(changes) //
                     .build();
-        } catch (DataIntegrityViolationException dve) {
+        } catch (final JpaSystemException | DataIntegrityViolationException dve) {
             handleDataIntegrityIssues(jsonCommand, dve.getMostSpecificCause(), dve);
             return CommandProcessingResult.empty();
         }
@@ -382,7 +379,7 @@ public class ShareAccountWritePlatformServiceJpaRepositoryImpl implements ShareA
                     .withEntityId(accountId) //
                     .with(changes) //
                     .build();
-        } catch (DataIntegrityViolationException dve) {
+        } catch (final JpaSystemException | DataIntegrityViolationException dve) {
             handleDataIntegrityIssues(jsonCommand, dve.getMostSpecificCause(), dve);
             return CommandProcessingResult.empty();
         }
@@ -419,7 +416,7 @@ public class ShareAccountWritePlatformServiceJpaRepositoryImpl implements ShareA
                     .withEntityId(accountId) //
                     .with(changes) //
                     .build();
-        } catch (DataIntegrityViolationException dve) {
+        } catch (final JpaSystemException | DataIntegrityViolationException dve) {
             handleDataIntegrityIssues(jsonCommand, dve.getMostSpecificCause(), dve);
             return CommandProcessingResult.empty();
         }
@@ -448,7 +445,7 @@ public class ShareAccountWritePlatformServiceJpaRepositoryImpl implements ShareA
                     .withEntityId(accountId) //
                     .with(changes) //
                     .build();
-        } catch (DataIntegrityViolationException dve) {
+        } catch (final JpaSystemException | DataIntegrityViolationException dve) {
             handleDataIntegrityIssues(jsonCommand, dve.getMostSpecificCause(), dve);
             return CommandProcessingResult.empty();
         }
@@ -484,7 +481,7 @@ public class ShareAccountWritePlatformServiceJpaRepositoryImpl implements ShareA
                     .withEntityId(accountId) //
                     .with(changes) //
                     .build();
-        } catch (DataIntegrityViolationException dve) {
+        } catch (final JpaSystemException | DataIntegrityViolationException dve) {
             handleDataIntegrityIssues(jsonCommand, dve.getMostSpecificCause(), dve);
             return CommandProcessingResult.empty();
         }
@@ -518,7 +515,7 @@ public class ShareAccountWritePlatformServiceJpaRepositoryImpl implements ShareA
                     .withEntityId(accountId) //
                     .with(changes) //
                     .build();
-        } catch (DataIntegrityViolationException dve) {
+        } catch (final JpaSystemException | DataIntegrityViolationException dve) {
             handleDataIntegrityIssues(jsonCommand, dve.getMostSpecificCause(), dve);
             return CommandProcessingResult.empty();
         }

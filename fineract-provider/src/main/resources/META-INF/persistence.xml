@@ -25,14 +25,18 @@
     xmlns="http://java.sun.com/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd">
 
-    <persistence-unit name="jpa-pu" transaction-type="RESOURCE_LOCAL">
-        <provider>org.apache.openjpa.persistence.PersistenceProviderImpl</provider>
-    <properties>
-        <property name="openjpa.Compatibility" value="QuotedNumbersInQueries=true"/>
-        <property name="openjpa.jdbc.DBDictionary" value="org.apache.fineract.infrastructure.core.domain.MySQLDictionaryCustom"/>
-        <!--<property name="openjpa.InverseManager" value="true(Action=warn)"/> -->
-      <!-- <property name="openjpa.Log" value="DefaultLevel=WARN, Runtime=INFO, Tool=INFO, SQL=TRACE"/>-->
-       <property name="openjpa.jdbc.MappingDefaults" value="ForeignKeyDeleteAction=CASCADE"/>
-    </properties>
+    <persistence-unit name="EclipseLink-PU" transaction-type="RESOURCE_LOCAL">
+        <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
+        <exclude-unlisted-classes>false</exclude-unlisted-classes>
+        <shared-cache-mode>ALL</shared-cache-mode>
+        <properties>
+            <property name="eclipselink.cache.shared.default" value="false"/>
+            <property name="eclipselink.weaving" value="static"/>
+            <property name="eclipselink.logging.level" value="ALL"/>
+            <property name="eclipselink.logging.parameters" value="true"/>
+            <property name="eclipselink.logging.level.sql" value="ALL"/>
+            <property name="eclipselink.jdbc.batch-writing" value="JDBC"/>
+            <property name="eclipselink.batch.size" value="100"/>
+        </properties>
     </persistence-unit>
 </persistence>

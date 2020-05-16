@@ -18,11 +18,9 @@
  */
 package org.apache.fineract.infrastructure.creditbureau.domain;
 
-import java.util.ArrayList;
-import java.util.List;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
-import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import org.apache.fineract.infrastructure.core.api.JsonCommand;
 import org.apache.fineract.infrastructure.core.domain.AbstractPersistableCustom;
@@ -39,16 +37,14 @@ public class CreditBureau extends AbstractPersistableCustom {
 
     private String implementationKey;
 
-    @OneToMany(mappedBy = "organisation_creditbureau", cascade = CascadeType.ALL)
-    private List<CreditBureauLoanProductMapping> CreditBureauLoanProductMapping = new ArrayList<>();
+    @OneToOne(mappedBy = "creditbureau", cascade = CascadeType.ALL)
+    private OrganisationCreditBureau organisationCreditBureau;
 
-    public CreditBureau(String name, String product, String country, String implementationKey,
-            List<CreditBureauLoanProductMapping> CreditBureauLoanProductMapping) {
+    public CreditBureau(String name, String product, String country, String implementationKey) {
         this.name = name;
         this.product = product;
         this.country = country;
         this.implementationKey = implementationKey;
-        this.CreditBureauLoanProductMapping = CreditBureauLoanProductMapping;
     }
 
     public CreditBureau() {
@@ -62,7 +58,7 @@ public class CreditBureau extends AbstractPersistableCustom {
         final String tcountry = command.stringValueOfParameterNamed("country");
         final String timplementationKey = command.stringValueOfParameterNamed("implementationKey");
 
-        return new CreditBureau(tname, tproduct, tcountry, timplementationKey, null);
+        return new CreditBureau(tname, tproduct, tcountry, timplementationKey);
 
     }
 
@@ -96,14 +92,6 @@ public class CreditBureau extends AbstractPersistableCustom {
 
     public void setImplementationKey(String implementationKey) {
         this.implementationKey = implementationKey;
-    }
-
-    public List<CreditBureauLoanProductMapping> getCreditBureauLpMapping() {
-        return this.CreditBureauLoanProductMapping;
-    }
-
-    public void setCreditBureauLpMapping(List<CreditBureauLoanProductMapping> CreditBureauLoanProductMapping) {
-        this.CreditBureauLoanProductMapping = CreditBureauLoanProductMapping;
     }
 
 }

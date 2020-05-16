@@ -41,8 +41,6 @@ buildscript {
             'org.zeroturnaround:gradle-jrebel-plugin:1.1.10',
             'org.springframework.boot:spring-boot-gradle-plugin:2.2.7.RELEASE'
         // below
-        classpath 'org.apache.openjpa:openjpa:3.1.1' // when upgrading, also change OpenJPA version repeated below in dependencyManagement!
-        classpath 'com.radcortez.gradle:openjpa-gradle-plugin:3.1.0'
         classpath 'org.nosphere.apache:creadur-rat-gradle:0.7.0'
         classpath "gradle.plugin.com.github.spotbugs.snom:spotbugs-gradle-plugin:4.4.3"
         classpath "gradle.plugin.com.github.andygoossens:gradle-modernizer-plugin:1.3.0"
@@ -64,7 +62,6 @@ apply plugin: 'idea'
 apply plugin: 'com.bmuschko.cargo'
 apply plugin: 'project-report'
 apply plugin: 'java-library'
-apply plugin: 'openjpa'
 apply plugin: "com.github.spotbugs"
 apply plugin: 'checkstyle'
 apply plugin: 'com.github.andygoossens.gradle-modernizer-plugin'
@@ -84,7 +81,7 @@ dependencyManagement {
         // (The :+ seems to mean latest available version available on Maven Central, which we should also avoid, as it's not isolated?)
 
         dependency 'org.springframework.security.oauth:spring-security-oauth2:2.5.0.RELEASE'
-        dependency "org.apache.openjpa:openjpa:3.1.1" // when upgrading, also change OpenJPA version repeated above in buildscript!
+        dependency 'org.eclipse.persistence:org.eclipse.persistence.jpa:2.7.7'
         dependency 'com.squareup.retrofit:retrofit:1.9.0'
         dependency 'com.squareup.okhttp:okhttp:2.7.5'
         dependency 'com.squareup.okhttp:okhttp-urlconnection:2.7.5'
@@ -176,13 +173,6 @@ eclipse
 {
     project {
         buildCommand([ LaunchConfigHandle: "<project>/.externalToolBuilders/OpenJPA Enhance Builder.launch" ],  'org.eclipse.ui.externaltools.ExternalToolBuilder')
-    }
-}
-
-openjpa {
-    includes = ['**/AbstractPersistableCustom.class', '**/domain/*.class']
-    enhance {
-        enforcePropertyRestrictions true
     }
 }
 
@@ -625,7 +615,6 @@ cargo {
 cargoRunLocal.dependsOn bootWar
 cargoStartLocal.dependsOn bootWar
 cargoStartLocal.mustRunAfter "integrationTestClasses"
-cargoStartLocal.mustRunAfter "enhance"
 
 /* http://stackoverflow.com/questions/19653311/jpa-repository-works-in-idea-and-production-but-not-in-gradle */
 sourceSets.main.output.resourcesDir = sourceSets.main.java.outputDir
@@ -658,7 +647,24 @@ sourceSets {
 configurations {
     integrationTestCompile.extendsFrom testImplementation
     integrationTestRuntime.extendsFrom testRuntime
+    weaver.extendsFrom implementation
 }
+
+task weaveJpaEntities(type: JavaExec, dependsOn: [compileJava, processResources]) {
+    main = 'org.eclipse.persistence.tools.weaving.jpa.StaticWeave'
+    classpath configurations.weaver
+    args '-persistenceinfo'
+    args processResources.destinationDir.absolutePath
+    args '-classpath'
+    args configurations.compile.incoming.files.asPath
+    args '-loglevel'
+    args 'FINE' // logging level at "FINE" shows alot of output to console.
+    args sourceSets.main.java.outputDir.absolutePath
+    args sourceSets.main.java.outputDir.absolutePath
+
+    inputs.files fileTree(processResources.destinationDir).matching({pattern -> pattern.include('**/META-INF/persistence.xml')})
+}
+classes.dependsOn weaveJpaEntities
 
 task integrationTest(type:Test) {
     description = "Run integration tests (located in src/integrationTest/java). Starts Tomcat in daemon mode before executing the tests (and stops it after)."
@@ -746,6 +752,7 @@ bootJar {
 spotbugs {
     reportLevel = 'high'
     showProgress = true
+    excludeFilter = file("config/checkstyle/spotbugs-exclude.xml")
 }
 // https://github.com/spotbugs/spotbugs-gradle-plugin/issues/242
 spotbugsMain {

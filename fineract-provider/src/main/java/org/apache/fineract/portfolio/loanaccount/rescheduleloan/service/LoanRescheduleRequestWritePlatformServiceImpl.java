@@ -86,6 +86,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.orm.jpa.JpaSystemException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -278,15 +279,15 @@ public class LoanRescheduleRequestWritePlatformServiceImpl implements LoanResche
                     decimalValue, dueDate);
 
             // create a new entry in the m_loan_reschedule_request table
-            this.loanRescheduleRequestRepository.save(loanRescheduleRequest);
-            this.loanRepositoryWrapper.save(loan);
+            this.loanRescheduleRequestRepository.saveAndFlush(loanRescheduleRequest);
+            this.loanRepositoryWrapper.saveAndFlush(loan);
 
             return new CommandProcessingResultBuilder().withCommandId(jsonCommand.commandId()).withEntityId(loanRescheduleRequest.getId())
                     .withLoanId(loan.getId()).withClientId(loan.getClientId()).withOfficeId(loan.getOfficeId())
                     .withGroupId(loan.getGroupId()).build();
         }
 
-        catch (final DataIntegrityViolationException dve) {
+        catch (final JpaSystemException | DataIntegrityViolationException dve) {
             // handle the data integrity violation
             handleDataIntegrityViolation(dve);
 
@@ -459,7 +460,7 @@ public class LoanRescheduleRequestWritePlatformServiceImpl implements LoanResche
             ChangedTransactionDetail changedTransactionDetail = loan.processTransactions();
 
             for (LoanRepaymentScheduleHistory loanRepaymentScheduleHistory : loanRepaymentScheduleHistoryList) {
-                this.loanRepaymentScheduleHistoryRepository.save(loanRepaymentScheduleHistory);
+                this.loanRepaymentScheduleHistoryRepository.saveAndFlush(loanRepaymentScheduleHistory);
             }
 
             loan.updateRescheduledByUser(appUser);
@@ -473,7 +474,7 @@ public class LoanRescheduleRequestWritePlatformServiceImpl implements LoanResche
 
             if (changedTransactionDetail != null) {
                 for (final Map.Entry<Long, LoanTransaction> mapEntry : changedTransactionDetail.getNewTransactionMappings().entrySet()) {
-                    this.loanTransactionRepository.save(mapEntry.getValue());
+                    this.loanTransactionRepository.saveAndFlush(mapEntry.getValue());
                     // update loan with references to the newly created
                     // transactions
                     loan.addLoanTransaction(mapEntry.getValue());
@@ -489,7 +490,7 @@ public class LoanRescheduleRequestWritePlatformServiceImpl implements LoanResche
                     .withOfficeId(loan.getOfficeId()).withGroupId(loan.getGroupId()).build();
         }
 
-        catch (final DataIntegrityViolationException dve) {
+        catch (final JpaSystemException | DataIntegrityViolationException dve) {
             // handle the data integrity violation
             handleDataIntegrityViolation(dve);
 
@@ -503,11 +504,11 @@ public class LoanRescheduleRequestWritePlatformServiceImpl implements LoanResche
             List<LoanRepaymentScheduleInstallment> installments = loan.getRepaymentScheduleInstallments();
             for (LoanRepaymentScheduleInstallment installment : installments) {
                 if (installment.getId() == null) {
-                    this.repaymentScheduleInstallmentRepository.save(installment);
+                    this.repaymentScheduleInstallmentRepository.saveAndFlush(installment);
                 }
             }
             this.loanRepositoryWrapper.saveAndFlush(loan);
-        } catch (final DataIntegrityViolationException e) {
+        } catch (final JpaSystemException | DataIntegrityViolationException e) {
             final Throwable realCause = e.getCause();
             final List<ApiParameterError> dataValidationErrors = new ArrayList<>();
             final DataValidatorBuilder baseDataValidator = new DataValidatorBuilder(dataValidationErrors).resource("loan.transaction");
@@ -571,7 +572,7 @@ public class LoanRescheduleRequestWritePlatformServiceImpl implements LoanResche
                     .withGroupId(loanRescheduleRequest.getLoan().getGroupId()).build();
         }
 
-        catch (final DataIntegrityViolationException dve) {
+        catch (final JpaSystemException | DataIntegrityViolationException dve) {
             // handle the data integrity violation
             handleDataIntegrityViolation(dve);
 
@@ -587,7 +588,7 @@ public class LoanRescheduleRequestWritePlatformServiceImpl implements LoanResche
      *            data integrity violation exception
      *
      **/
-    private void handleDataIntegrityViolation(final DataIntegrityViolationException dve) {
+    private void handleDataIntegrityViolation(final Exception dve) {
 
         LOG.error("Error occured.", dve);
 

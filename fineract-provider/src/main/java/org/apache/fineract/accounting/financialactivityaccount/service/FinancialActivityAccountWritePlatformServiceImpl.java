@@ -39,6 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.orm.jpa.JpaSystemException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -72,14 +73,13 @@ public class FinancialActivityAccountWritePlatformServiceImpl implements Financi
             FinancialActivityAccount financialActivityAccount = FinancialActivityAccount.createNew(glAccount, financialActivityId);
 
             validateFinancialActivityAndAccountMapping(financialActivityAccount);
-            this.financialActivityAccountRepository.save(financialActivityAccount);
+            this.financialActivityAccountRepository.saveAndFlush(financialActivityAccount);
             return new CommandProcessingResultBuilder() //
                     .withCommandId(command.commandId()) //
                     .withEntityId(financialActivityAccount.getId()) //
                     .build();
-        } catch (DataIntegrityViolationException dataIntegrityViolationException) {
-            handleFinancialActivityAccountDataIntegrityIssues(command, dataIntegrityViolationException.getMostSpecificCause(),
-                    dataIntegrityViolationException);
+        } catch (final JpaSystemException | DataIntegrityViolationException dve) {
+            handleFinancialActivityAccountDataIntegrityIssues(command, dve.getMostSpecificCause(), dve);
             return CommandProcessingResult.empty();
         } catch (final PersistenceException ee) {
             Throwable throwable = ExceptionUtils.getRootCause(ee.getCause());
@@ -121,16 +121,15 @@ public class FinancialActivityAccountWritePlatformServiceImpl implements Financi
 
             if (!changes.isEmpty()) {
                 validateFinancialActivityAndAccountMapping(financialActivityAccount);
-                this.financialActivityAccountRepository.save(financialActivityAccount);
+                this.financialActivityAccountRepository.saveAndFlush(financialActivityAccount);
             }
             return new CommandProcessingResultBuilder() //
                     .withCommandId(command.commandId()) //
                     .withEntityId(financialActivityAccountId) //
                     .with(changes) //
                     .build();
-        } catch (DataIntegrityViolationException dataIntegrityViolationException) {
-            handleFinancialActivityAccountDataIntegrityIssues(command, dataIntegrityViolationException.getMostSpecificCause(),
-                    dataIntegrityViolationException);
+        } catch (final JpaSystemException | DataIntegrityViolationException dve) {
+            handleFinancialActivityAccountDataIntegrityIssues(command, dve.getMostSpecificCause(), dve);
             return CommandProcessingResult.empty();
         } catch (final PersistenceException ee) {
             Throwable throwable = ExceptionUtils.getRootCause(ee.getCause());

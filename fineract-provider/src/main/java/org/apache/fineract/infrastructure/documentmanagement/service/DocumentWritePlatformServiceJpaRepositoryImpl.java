@@ -36,6 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.orm.jpa.JpaSystemException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -76,10 +77,10 @@ public class DocumentWritePlatformServiceJpaRepositoryImpl implements DocumentWr
                     documentCommand.getName(), documentCommand.getFileName(), documentCommand.getSize(), documentCommand.getType(),
                     documentCommand.getDescription(), fileLocation, contentRepository.getStorageType());
 
-            this.documentRepository.save(document);
+            this.documentRepository.saveAndFlush(document);
 
             return document.getId();
-        } catch (final DataIntegrityViolationException dve) {
+        } catch (final JpaSystemException | DataIntegrityViolationException dve) {
             LOG.error("Error occured.", dve);
             throw new PlatformDataIntegrityException("error.msg.document.unknown.data.integrity.issue",
                     "Unknown data integrity issue with resource.");
@@ -133,7 +134,7 @@ public class DocumentWritePlatformServiceJpaRepositoryImpl implements DocumentWr
             this.documentRepository.saveAndFlush(documentForUpdate);
 
             return new CommandProcessingResult(documentForUpdate.getId());
-        } catch (final DataIntegrityViolationException dve) {
+        } catch (final JpaSystemException | DataIntegrityViolationException dve) {
             LOG.error("Error occured.", dve);
             throw new PlatformDataIntegrityException("error.msg.document.unknown.data.integrity.issue",
                     "Unknown data integrity issue with resource.");

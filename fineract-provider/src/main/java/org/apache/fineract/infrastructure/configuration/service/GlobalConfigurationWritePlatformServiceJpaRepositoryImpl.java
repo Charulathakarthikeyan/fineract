@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.orm.jpa.JpaSystemException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -76,8 +77,8 @@ public class GlobalConfigurationWritePlatformServiceJpaRepositoryImpl implements
 
             return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withEntityId(configId).with(changes).build();
 
-        } catch (final DataIntegrityViolationException dve) {
-            handleDataIntegrityIssues(dve);
+        } catch (final JpaSystemException | DataIntegrityViolationException dve) {
+            handleDataIntegrityIssues(dve.getMostSpecificCause(), dve);
             return CommandProcessingResult.empty();
         }
 
@@ -89,8 +90,8 @@ public class GlobalConfigurationWritePlatformServiceJpaRepositoryImpl implements
         try {
             final GlobalConfigurationProperty ppi = GlobalConfigurationProperty.newSurveyConfiguration(name);
             this.repository.save(ppi);
-        } catch (final DataIntegrityViolationException dve) {
-            handleDataIntegrityIssues(dve);
+        } catch (final JpaSystemException | DataIntegrityViolationException dve) {
+            handleDataIntegrityIssues(dve.getMostSpecificCause(), dve);
         }
 
     }
@@ -98,11 +99,10 @@ public class GlobalConfigurationWritePlatformServiceJpaRepositoryImpl implements
     /*
      * Guaranteed to throw an exception no matter what the data integrity issue is.
      */
-    private void handleDataIntegrityIssues(final DataIntegrityViolationException dve) {
+    private void handleDataIntegrityIssues(final Throwable throwable, final Exception dve) {
 
-        final Throwable realCause = dve.getMostSpecificCause();
         LOG.error("Error occured.", dve);
         throw new PlatformDataIntegrityException("error.msg.globalConfiguration.unknown.data.integrity.issue",
-                "Unknown data integrity issue with resource: " + realCause.getMessage());
+                "Unknown data integrity issue with resource: " + throwable.getMessage());
     }
 }

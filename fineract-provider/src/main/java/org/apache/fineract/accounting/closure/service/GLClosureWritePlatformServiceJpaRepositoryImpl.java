@@ -41,6 +41,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.orm.jpa.JpaSystemException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -91,8 +92,8 @@ public class GLClosureWritePlatformServiceJpaRepositoryImpl implements GLClosure
 
             return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withOfficeId(officeId)
                     .withEntityId(glClosure.getId()).build();
-        } catch (final DataIntegrityViolationException dve) {
-            handleGLClosureIntegrityIssues(command, dve);
+        } catch (final JpaSystemException | DataIntegrityViolationException dve) {
+            handleGLClosureIntegrityIssues(command, dve.getMostSpecificCause(), dve);
             return CommandProcessingResult.empty();
         }
     }
@@ -142,15 +143,14 @@ public class GLClosureWritePlatformServiceJpaRepositoryImpl implements GLClosure
      * @param command
      * @param dve
      */
-    private void handleGLClosureIntegrityIssues(final JsonCommand command, final DataIntegrityViolationException dve) {
-        final Throwable realCause = dve.getMostSpecificCause();
-        if (realCause.getMessage().contains("office_id_closing_date")) {
+    private void handleGLClosureIntegrityIssues(final JsonCommand command, final Throwable throwable, final Exception dve) {
+        if (throwable.getMessage().contains("office_id_closing_date")) {
             throw new GLClosureDuplicateException(command.longValueOfParameterNamed(GLClosureJsonInputParams.OFFICE_ID.getValue()),
                     new LocalDate(command.dateValueOfParameterNamed(GLClosureJsonInputParams.CLOSING_DATE.getValue())));
         }
 
         LOG.error("Error occured.", dve);
         throw new PlatformDataIntegrityException("error.msg.glClosure.unknown.data.integrity.issue",
-                "Unknown data integrity issue with resource GL Closure: " + realCause.getMessage());
+                "Unknown data integrity issue with resource GL Closure: " + throwable.getMessage());
     }
 }

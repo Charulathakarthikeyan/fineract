@@ -209,13 +209,13 @@ public class DepositApplicationProcessWritePlatformServiceJpaRepositoryImpl impl
 
             account.updateMaturityDateAndAmountBeforeAccountActivation(mc, isPreMatureClosure, isSavingsInterestPostingAtCurrentPeriodEnd,
                     financialYearBeginningMonth);
-            this.fixedDepositAccountRepository.save(account);
+            this.fixedDepositAccountRepository.saveAndFlush(account);
 
             if (account.isAccountNumberRequiresAutoGeneration()) {
                 AccountNumberFormat accountNumberFormat = this.accountNumberFormatRepository.findByAccountType(EntityAccountType.CLIENT);
                 account.updateAccountNo(this.accountNumberGenerator.generate(account, accountNumberFormat));
 
-                this.savingAccountRepository.save(account);
+                this.savingAccountRepository.saveAndFlush(account);
             }
 
             // Save linked account information
@@ -227,7 +227,7 @@ public class DepositApplicationProcessWritePlatformServiceJpaRepositoryImpl impl
                 boolean isActive = true;
                 final AccountAssociations accountAssociations = AccountAssociations.associateSavingsAccount(account, savingsAccount,
                         AccountAssociationType.LINKED_ACCOUNT_ASSOCIATION.getValue(), isActive);
-                this.accountAssociationsRepository.save(accountAssociations);
+                this.accountAssociationsRepository.saveAndFlush(accountAssociations);
             }
 
             final Long savingsId = account.getId();
@@ -269,7 +269,7 @@ public class DepositApplicationProcessWritePlatformServiceJpaRepositoryImpl impl
             final RecurringDepositAccount account = (RecurringDepositAccount) this.depositAccountAssembler.assembleFrom(command,
                     submittedBy, DepositAccountType.RECURRING_DEPOSIT);
 
-            this.recurringDepositAccountRepository.save(account);
+            this.recurringDepositAccountRepository.saveAndFlush(account);
 
             if (account.isAccountNumberRequiresAutoGeneration()) {
                 final AccountNumberFormat accountNumberFormat = this.accountNumberFormatRepository
@@ -279,7 +279,7 @@ public class DepositApplicationProcessWritePlatformServiceJpaRepositoryImpl impl
 
             final Long savingsId = account.getId();
             final CalendarInstance calendarInstance = getCalendarInstance(command, account);
-            this.calendarInstanceRepository.save(calendarInstance);
+            this.calendarInstanceRepository.saveAndFlush(calendarInstance);
 
             // FIXME: Avoid save separately (Calendar instance requires account
             // details)
@@ -293,7 +293,7 @@ public class DepositApplicationProcessWritePlatformServiceJpaRepositoryImpl impl
             account.updateMaturityDateAndAmount(mc, isPreMatureClosure, isSavingsInterestPostingAtCurrentPeriodEnd,
                     financialYearBeginningMonth);
             account.validateApplicableInterestRate();
-            this.savingAccountRepository.save(account);
+            this.savingAccountRepository.saveAndFlush(account);
             this.businessEventNotifierService.notifyBusinessEventWasExecuted(BusinessEvents.RECURRING_DEPOSIT_ACCOUNT_CREATE,
                     constructEntityMap(BusinessEntity.DEPOSIT_ACCOUNT, account));
 
@@ -401,7 +401,7 @@ public class DepositApplicationProcessWritePlatformServiceJpaRepositoryImpl impl
                 final boolean isPreMatureClosure = false;
                 account.updateMaturityDateAndAmountBeforeAccountActivation(mc, isPreMatureClosure,
                         isSavingsInterestPostingAtCurrentPeriodEnd, financialYearBeginningMonth);
-                this.savingAccountRepository.save(account);
+                this.savingAccountRepository.saveAndFlush(account);
             }
 
             boolean isLinkedAccRequired = command.booleanPrimitiveValueOfParameterNamed(transferInterestToSavingsParamName);
@@ -444,7 +444,7 @@ public class DepositApplicationProcessWritePlatformServiceJpaRepositoryImpl impl
                         accountAssociations.updateLinkedSavingsAccount(savingsAccount);
                     }
                     changes.put(DepositsApiConstants.linkedAccountParamName, savingsAccountId);
-                    this.accountAssociationsRepository.save(accountAssociations);
+                    this.accountAssociationsRepository.saveAndFlush(accountAssociations);
                 }
             }
 
@@ -499,7 +499,7 @@ public class DepositApplicationProcessWritePlatformServiceJpaRepositoryImpl impl
                 account.updateMaturityDateAndAmount(mc, isPreMatureClosure, isSavingsInterestPostingAtCurrentPeriodEnd,
                         financialYearBeginningMonth);
                 account.validateApplicableInterestRate();
-                this.savingAccountRepository.save(account);
+                this.savingAccountRepository.saveAndFlush(account);
 
             }
 
@@ -516,7 +516,7 @@ public class DepositApplicationProcessWritePlatformServiceJpaRepositoryImpl impl
                 Calendar calendar = calendarInstance.getCalendar();
                 calendar.updateRepeatingCalendar(calendarStartDate, CalendarFrequencyType.from(periodFrequencyType), frequency,
                         repeatsOnDay, null);
-                this.calendarInstanceRepository.save(calendarInstance);
+                this.calendarInstanceRepository.saveAndFlush(calendarInstance);
             }
 
             return new CommandProcessingResultBuilder() //
@@ -649,13 +649,13 @@ public class DepositApplicationProcessWritePlatformServiceJpaRepositoryImpl impl
 
         final Map<String, Object> changes = savingsAccount.approveApplication(currentUser, command, DateUtils.getLocalDateOfTenant());
         if (!changes.isEmpty()) {
-            this.savingAccountRepository.save(savingsAccount);
+            this.savingAccountRepository.saveAndFlush(savingsAccount);
 
             final String noteText = command.stringValueOfParameterNamed("note");
             if (StringUtils.isNotBlank(noteText)) {
                 final Note note = Note.savingNote(savingsAccount, noteText);
                 changes.put("note", noteText);
-                this.noteRepository.save(note);
+                this.noteRepository.saveAndFlush(note);
             }
         }
 
@@ -684,13 +684,13 @@ public class DepositApplicationProcessWritePlatformServiceJpaRepositoryImpl impl
 
         final Map<String, Object> changes = savingsAccount.undoApplicationApproval();
         if (!changes.isEmpty()) {
-            this.savingAccountRepository.save(savingsAccount);
+            this.savingAccountRepository.saveAndFlush(savingsAccount);
 
             final String noteText = command.stringValueOfParameterNamed("note");
             if (StringUtils.isNotBlank(noteText)) {
                 final Note note = Note.savingNote(savingsAccount, noteText);
                 changes.put("note", noteText);
-                this.noteRepository.save(note);
+                this.noteRepository.saveAndFlush(note);
             }
         }
 
@@ -719,13 +719,13 @@ public class DepositApplicationProcessWritePlatformServiceJpaRepositoryImpl impl
 
         final Map<String, Object> changes = savingsAccount.rejectApplication(currentUser, command, DateUtils.getLocalDateOfTenant());
         if (!changes.isEmpty()) {
-            this.savingAccountRepository.save(savingsAccount);
+            this.savingAccountRepository.saveAndFlush(savingsAccount);
 
             final String noteText = command.stringValueOfParameterNamed("note");
             if (StringUtils.isNotBlank(noteText)) {
                 final Note note = Note.savingNote(savingsAccount, noteText);
                 changes.put("note", noteText);
-                this.noteRepository.save(note);
+                this.noteRepository.saveAndFlush(note);
             }
         }
 
@@ -754,13 +754,13 @@ public class DepositApplicationProcessWritePlatformServiceJpaRepositoryImpl impl
         final Map<String, Object> changes = savingsAccount.applicantWithdrawsFromApplication(currentUser, command,
                 DateUtils.getLocalDateOfTenant());
         if (!changes.isEmpty()) {
-            this.savingAccountRepository.save(savingsAccount);
+            this.savingAccountRepository.saveAndFlush(savingsAccount);
 
             final String noteText = command.stringValueOfParameterNamed("note");
             if (StringUtils.isNotBlank(noteText)) {
                 final Note note = Note.savingNote(savingsAccount, noteText);
                 changes.put("note", noteText);
-                this.noteRepository.save(note);
+                this.noteRepository.saveAndFlush(note);
             }
         }
 

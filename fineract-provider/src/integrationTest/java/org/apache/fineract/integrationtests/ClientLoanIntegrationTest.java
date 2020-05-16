@@ -57,6 +57,7 @@ import org.apache.fineract.integrationtests.common.savings.SavingsStatusChecker;
 import org.joda.time.LocalDate;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -3108,6 +3109,7 @@ public class ClientLoanIntegrationTest {
         }
     }
 
+    @Disabled // FINERACT-1050
     @Test
     public void testLoanScheduleWithInterestRecalculation_WITH_REST_SAME_AS_REPAYMENT_INTEREST_COMPOUND_NONE_STRATEGY_REDUCE_EMI() {
         this.loanTransactionHelper = new LoanTransactionHelper(this.requestSpec, this.responseSpec);
@@ -3201,6 +3203,7 @@ public class ClientLoanIntegrationTest {
         LoanStatusChecker.verifyLoanAccountIsClosed(loanStatusHashMap);
     }
 
+    @Disabled // FINERACT-1050
     @Test
     public void testLoanScheduleWithInterestRecalculation_WITH_REST_SAME_AS_REPAYMENT_INTEREST_COMPOUND_NONE_STRATEGY_REDUCE_EMI_PRE_CLOSE_INTEREST_PRE_CLOSE_DATE() {
         String preCloseInterestStrategy = LoanProductTestBuilder.INTEREST_APPLICABLE_STRATEGY_ON_PRE_CLOSE_DATE;
@@ -3209,6 +3212,7 @@ public class ClientLoanIntegrationTest {
                 preCloseInterestStrategy, preCloseAmount);
     }
 
+    @Disabled // FINERACT-1050
     @Test
     public void testLoanScheduleWithInterestRecalculation_WITH_REST_SAME_AS_REPAYMENT_INTEREST_COMPOUND_NONE_STRATEGY_REDUCE_EMI_PRE_CLOSE_INTEREST_REST_DATE() {
         String preCloseInterestStrategy = LoanProductTestBuilder.INTEREST_APPLICABLE_STRATEGY_REST_DATE;
@@ -3295,6 +3299,7 @@ public class ClientLoanIntegrationTest {
         LoanStatusChecker.verifyLoanAccountIsClosed(loanStatusHashMap);
     }
 
+    @Disabled // FINERACT-1050
     @Test
     public void testLoanScheduleWithInterestRecalculation_WITH_REST_SAME_AS_REPAYMENT_INTEREST_COMPOUND_NONE_STRATEGY_REDUCE_EMI_WITH_INSTALLMENT_CHARGE() {
         this.loanTransactionHelper = new LoanTransactionHelper(this.requestSpec, this.responseSpec);
@@ -3503,6 +3508,7 @@ public class ClientLoanIntegrationTest {
 
     }
 
+    @Disabled // FINERACT-1050
     @Test
     public void testLoanScheduleWithInterestRecalculation_WITH_REST_WEEKLY_INTEREST_COMPOUND_INTEREST_FEE_STRATEGY_REDUCE_NEXT_INSTALLMENTS() {
         this.loanTransactionHelper = new LoanTransactionHelper(this.requestSpec, this.responseSpec);
@@ -3620,6 +3626,7 @@ public class ClientLoanIntegrationTest {
 
     }
 
+    @Disabled // FINERACT-1050
     @Test
     public void testLoanScheduleWithInterestRecalculation_WITH_REST_WEEKLY_INTEREST_COMPOUND_INTEREST_FEE_STRATEGY_REDUCE_NEXT_INSTALLMENTS_PRE_CLOSE_INTEREST_PRE_CLOSE_DATE() {
         String preCloseInterestStrategy = LoanProductTestBuilder.INTEREST_APPLICABLE_STRATEGY_ON_PRE_CLOSE_DATE;
@@ -3629,6 +3636,7 @@ public class ClientLoanIntegrationTest {
 
     }
 
+    @Disabled // FINERACT-1050
     @Test
     public void testLoanScheduleWithInterestRecalculation_WITH_REST_WEEKLY_INTEREST_COMPOUND_INTEREST_FEE_STRATEGY_REDUCE_NEXT_INSTALLMENTS_PRE_CLOSE_INTEREST_REST_DATE() {
         String preCloseInterestStrategy = LoanProductTestBuilder.INTEREST_APPLICABLE_STRATEGY_REST_DATE;
@@ -3850,6 +3858,7 @@ public class ClientLoanIntegrationTest {
 
     }
 
+    @Disabled // FINERACT-1050
     @Test
     public void testLoanScheduleWithInterestRecalculation_WITH_PERIODIC_ACCOUNTING() {
         this.loanTransactionHelper = new LoanTransactionHelper(this.requestSpec, this.responseSpec);
@@ -3956,6 +3965,7 @@ public class ClientLoanIntegrationTest {
 
     }
 
+    @Disabled // FINERACT-1050
     @Test
     public void testLoanScheduleWithInterestRecalculation_WITH_CURRENT_REPAYMENT_BASED_ARREARS_AGEING() {
         this.loanTransactionHelper = new LoanTransactionHelper(this.requestSpec, this.responseSpec);
@@ -4036,6 +4046,7 @@ public class ClientLoanIntegrationTest {
 
     }
 
+    @Disabled // FINERACT-1050
     @Test
     public void testLoanScheduleWithInterestRecalculation_WITH_ORIGINAL_REPAYMENT_BASED_ARREARS_AGEING() {
         this.loanTransactionHelper = new LoanTransactionHelper(this.requestSpec, this.responseSpec);
@@ -4117,12 +4128,14 @@ public class ClientLoanIntegrationTest {
 
     }
 
+    @Disabled // FINERACT-1050
     @Test
     public void testLoanScheduleWithInterestRecalculation_FOR_PRE_CLOSE_WITH_MORATORIUM_INTEREST_APPLICABLE_STRATEGY_ON_PRE_CLOSE_DATE() {
         testLoanScheduleWithInterestRecalculation_FOR_PRE_CLOSE_WITH_MORATORIUM(
                 LoanProductTestBuilder.INTEREST_APPLICABLE_STRATEGY_ON_PRE_CLOSE_DATE, "10006.59");
     }
 
+    @Disabled // FINERACT-1050
     @Test
     public void testLoanScheduleWithInterestRecalculation_FOR_PRE_CLOSE_WITH_MORATORIUM_INTEREST_APPLICABLE_STRATEGY_REST_DATE() {
         testLoanScheduleWithInterestRecalculation_FOR_PRE_CLOSE_WITH_MORATORIUM(
@@ -4938,6 +4951,7 @@ public class ClientLoanIntegrationTest {
     /**
      * Test case to verify Loan Foreclosure.
      */
+    @Disabled // FINERACT-1050
     @Test
     public void testLoanForeclosure() {
         this.loanTransactionHelper = new LoanTransactionHelper(this.requestSpec, this.responseSpec);

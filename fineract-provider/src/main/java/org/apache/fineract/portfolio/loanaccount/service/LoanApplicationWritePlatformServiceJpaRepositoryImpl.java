@@ -142,6 +142,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.orm.jpa.JpaSystemException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -381,7 +382,7 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
                 }
             }
 
-            this.loanRepositoryWrapper.save(newLoanApplication);
+            this.loanRepositoryWrapper.saveAndFlush(newLoanApplication);
 
             if (loanProduct.isInterestRecalculationEnabled()) {
                 this.fromApiJsonDeserializer.validateLoanForInterestRecalculation(newLoanApplication);
@@ -423,7 +424,7 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
                                     command.bigDecimalValueOfParameterNamedDefaultToNullIfZero("totalLoan"), Long.valueOf(1), true,
                                     LoanStatus.SUBMITTED_AND_PENDING_APPROVAL.getValue(), applicationId);
                             newLoanApplication.setGlim(glimRepository.findOneByAccountNumber(accountNumber));
-                            this.loanRepositoryWrapper.save(newLoanApplication);
+                            this.loanRepositoryWrapper.saveAndFlush(newLoanApplication);
 
                         } else {
                             // ************** Parent-empty
@@ -435,7 +436,7 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
                                     command.bigDecimalValueOfParameterNamedDefaultToNullIfZero("totalLoan"), Long.valueOf(1), true,
                                     LoanStatus.SUBMITTED_AND_PENDING_APPROVAL.getValue(), applicationId);
                             newLoanApplication.setGlim(glimRepository.findOneByAccountNumber(accountNumber));
-                            this.loanRepositoryWrapper.save(newLoanApplication);
+                            this.loanRepositoryWrapper.saveAndFlush(newLoanApplication);
 
                         }
 
@@ -449,7 +450,7 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
                             newLoanApplication.updateAccountNo(accountNumber);
                             this.glimAccountInfoWritePlatformService.incrementChildAccountCount(glimAccount);
                             newLoanApplication.setGlim(glimAccount);
-                            this.loanRepositoryWrapper.save(newLoanApplication);
+                            this.loanRepositoryWrapper.saveAndFlush(newLoanApplication);
 
                         } else {
                             // **************Child-empty
@@ -462,7 +463,7 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
                                     command.bigDecimalValueOfParameterNamedDefaultToNullIfZero("totalLoan"), Long.valueOf(1), true,
                                     LoanStatus.SUBMITTED_AND_PENDING_APPROVAL.getValue(), applicationId);
                             newLoanApplication.setGlim(glimRepository.findOneByAccountNumber(accountNumber));
-                            this.loanRepositoryWrapper.save(newLoanApplication);
+                            this.loanRepositoryWrapper.saveAndFlush(newLoanApplication);
 
                         }
 
@@ -476,14 +477,14 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
                     }
                 } else { // for applications other than GLIM
                     newLoanApplication.updateAccountNo(this.accountNumberGenerator.generate(newLoanApplication, accountNumberFormat));
-                    this.loanRepositoryWrapper.save(newLoanApplication);
+                    this.loanRepositoryWrapper.saveAndFlush(newLoanApplication);
                 }
             }
 
             final String submittedOnNote = command.stringValueOfParameterNamed("submittedOnNote");
             if (StringUtils.isNotBlank(submittedOnNote)) {
                 final Note note = Note.loanNote(newLoanApplication, submittedOnNote);
-                this.noteRepository.save(note);
+                this.noteRepository.saveAndFlush(note);
             }
 
             // Save calendar instance
@@ -495,7 +496,7 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
 
                 final CalendarInstance calendarInstance = new CalendarInstance(calendar, newLoanApplication.getId(),
                         CalendarEntityType.LOANS.getValue());
-                this.calendarInstanceRepository.save(calendarInstance);
+                this.calendarInstanceRepository.saveAndFlush(calendarInstance);
             } else {
                 final LoanApplicationTerms loanApplicationTerms = this.loanScheduleAssembler.assembleLoanTerms(command.parsedJson());
                 final Integer repaymentFrequencyNthDayType = command.integerValueOfParameterNamed("repaymentFrequencyNthDayType");
@@ -513,10 +514,10 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
                     final Integer calendarEntityType = CalendarEntityType.LOANS.getValue();
                     final Calendar loanCalendar = Calendar.createRepeatingCalendar(title, calendarStartDate,
                             CalendarType.COLLECTION.getValue(), calendarFrequencyType, frequency, repeatsOnDay, repeatsOnNthDayOfMonth);
-                    this.calendarRepository.save(loanCalendar);
+                    this.calendarRepository.saveAndFlush(loanCalendar);
                     final CalendarInstance calendarInstance = CalendarInstance.from(loanCalendar, newLoanApplication.getId(),
                             calendarEntityType);
-                    this.calendarInstanceRepository.save(calendarInstance);
+                    this.calendarInstanceRepository.saveAndFlush(calendarInstance);
                 }
             }
 
@@ -547,7 +548,7 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
                         boolean isActive = true;
                         accountAssociations = AccountAssociations.associateSavingsAccount(newLoanApplication, savingsAccount,
                                 AccountAssociationType.LINKED_ACCOUNT_ASSOCIATION.getValue(), isActive);
-                        this.accountAssociationsRepository.save(accountAssociations);
+                        this.accountAssociationsRepository.saveAndFlush(accountAssociations);
 
                     } else {
                         throw new GroupMemberNotFoundInGSIMException(newLoanApplication.getClientId());
@@ -559,7 +560,7 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
                     boolean isActive = true;
                     accountAssociations = AccountAssociations.associateSavingsAccount(newLoanApplication, savingsAccount,
                             AccountAssociationType.LINKED_ACCOUNT_ASSOCIATION.getValue(), isActive);
-                    this.accountAssociationsRepository.save(accountAssociations);
+                    this.accountAssociationsRepository.saveAndFlush(accountAssociations);
 
                 }
             }
@@ -583,7 +584,7 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
                     .withClientId(newLoanApplication.getClientId()) //
                     .withGroupId(newLoanApplication.getGroupId()) //
                     .withLoanId(newLoanApplication.getId()).withGlimId(newLoanApplication.getGlimId()).build();
-        } catch (final DataIntegrityViolationException dve) {
+        } catch (final JpaSystemException | DataIntegrityViolationException dve) {
             handleDataIntegrityIssues(command, dve.getMostSpecificCause(), dve);
             return CommandProcessingResult.empty();
         } catch (final PersistenceException dve) {
@@ -736,7 +737,7 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
                 calendarFrequencyType, frequency, updatedRepeatsOnDay, recalculationFrequencyNthDay);
         final CalendarInstance calendarInstance = CalendarInstance.from(calendar, loan.loanInterestRecalculationDetails().getId(),
                 calendarEntityType.getValue());
-        this.calendarInstanceRepository.save(calendarInstance);
+        this.calendarInstanceRepository.saveAndFlush(calendarInstance);
     }
 
     @Transactional
@@ -1026,7 +1027,7 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
             final String submittedOnNote = command.stringValueOfParameterNamed("submittedOnNote");
             if (StringUtils.isNotBlank(submittedOnNote)) {
                 final Note note = Note.loanNote(existingLoanApplication, submittedOnNote);
-                this.noteRepository.save(note);
+                this.noteRepository.saveAndFlush(note);
             }
 
             final Long calendarId = command.longValueOfParameterNamed("calendarId");
@@ -1057,7 +1058,7 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
                     // attaching new calendar
                     final CalendarInstance calendarInstance = new CalendarInstance(calendar, existingLoanApplication.getId(),
                             CalendarEntityType.LOANS.getValue());
-                    this.calendarInstanceRepository.save(calendarInstance);
+                    this.calendarInstanceRepository.saveAndFlush(calendarInstance);
                 }
 
             } else {
@@ -1109,16 +1110,16 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
                                             String existingRecurrence = existingCalendar.getRecurrence();
                                             if (!existingRecurrence.equals(newCalendar.getRecurrence())) {
                                                 existingCalendar.setRecurrence(newCalendar.getRecurrence());
-                                                this.calendarRepository.save(existingCalendar);
+                                                this.calendarRepository.saveAndFlush(existingCalendar);
                                             }
                                         }
                                     }
                                 } else {
-                                    this.calendarRepository.save(newCalendar);
+                                    this.calendarRepository.saveAndFlush(newCalendar);
                                     final Integer calendarEntityType = CalendarEntityType.LOANS.getValue();
                                     final CalendarInstance calendarInstance = new CalendarInstance(newCalendar,
                                             existingLoanApplication.getId(), calendarEntityType);
-                                    this.calendarInstanceRepository.save(calendarInstance);
+                                    this.calendarInstanceRepository.saveAndFlush(calendarInstance);
                                 }
                             }
                         }
@@ -1163,7 +1164,7 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
                         accountAssociations.updateLinkedSavingsAccount(savingsAccount);
                     }
                     changes.put(linkAccountIdParamName, savingsAccountId);
-                    this.accountAssociationsRepository.save(accountAssociations);
+                    this.accountAssociationsRepository.saveAndFlush(accountAssociations);
                 }
             }
 
@@ -1192,7 +1193,7 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
             // updating loan interest recalculation details throwing null
             // pointer exception after saveAndFlush
             // http://stackoverflow.com/questions/17151757/hibernate-cascade-update-gives-null-pointer/17334374#17334374
-            this.loanRepositoryWrapper.save(existingLoanApplication);
+            this.loanRepositoryWrapper.saveAndFlush(existingLoanApplication);
 
             if (productRelatedDetail.isInterestRecalculationEnabled()) {
                 this.fromApiJsonDeserializer.validateLoanForInterestRecalculation(existingLoanApplication);
@@ -1210,7 +1211,7 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
                     .withGroupId(existingLoanApplication.getGroupId()) //
                     .withLoanId(existingLoanApplication.getId()) //
                     .with(changes).build();
-        } catch (final DataIntegrityViolationException dve) {
+        } catch (final JpaSystemException | DataIntegrityViolationException dve) {
             handleDataIntegrityIssues(command, dve.getMostSpecificCause(), dve);
             return CommandProcessingResult.empty();
         } catch (final PersistenceException dve) {
@@ -1326,7 +1327,7 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
                 if (count == parentLoan.getChildAccountsCount()) {
                     parentLoan.setPrincipalAmount(parentPrincipalAmount);
                     parentLoan.setLoanStatus(LoanStatus.APPROVED.getValue());
-                    glimRepository.save(parentLoan);
+                    glimRepository.saveAndFlush(parentLoan);
                 }
 
             }
@@ -1428,7 +1429,7 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
             if (StringUtils.isNotBlank(noteText)) {
                 final Note note = Note.loanNote(loan, noteText);
                 changes.put("note", noteText);
-                this.noteRepository.save(note);
+                this.noteRepository.saveAndFlush(note);
             }
 
             this.businessEventNotifierService.notifyBusinessEventWasExecuted(BusinessEvents.LOAN_APPROVED,
@@ -1467,7 +1468,7 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
                 // approved
                 if (count == parentLoan.getChildAccountsCount()) {
                     parentLoan.setLoanStatus(LoanStatus.SUBMITTED_AND_PENDING_APPROVAL.getValue());
-                    glimRepository.save(parentLoan);
+                    glimRepository.saveAndFlush(parentLoan);
                 }
 
             }
@@ -1506,7 +1507,7 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
             final String noteText = command.stringValueOfParameterNamed("note");
             if (StringUtils.isNotBlank(noteText)) {
                 final Note note = Note.loanNote(loan, noteText);
-                this.noteRepository.save(note);
+                this.noteRepository.saveAndFlush(note);
             }
             this.businessEventNotifierService.notifyBusinessEventWasExecuted(BusinessEvents.LOAN_UNDO_APPROVAL,
                     constructEntityMap(BusinessEntity.LOAN, loan));
@@ -1544,7 +1545,7 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
                 // rejected
                 if (count == parentLoan.getChildAccountsCount()) {
                     parentLoan.setLoanStatus(LoanStatus.REJECTED.getValue());
-                    glimRepository.save(parentLoan);
+                    glimRepository.saveAndFlush(parentLoan);
                 }
 
             }
@@ -1571,12 +1572,12 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
 
         final Map<String, Object> changes = loan.loanApplicationRejection(currentUser, command, defaultLoanLifecycleStateMachine());
         if (!changes.isEmpty()) {
-            this.loanRepositoryWrapper.save(loan);
+            this.loanRepositoryWrapper.saveAndFlush(loan);
 
             final String noteText = command.stringValueOfParameterNamed("note");
             if (StringUtils.isNotBlank(noteText)) {
                 final Note note = Note.loanNote(loan, noteText);
-                this.noteRepository.save(note);
+                this.noteRepository.saveAndFlush(note);
             }
         }
         this.businessEventNotifierService.notifyBusinessEventWasExecuted(BusinessEvents.LOAN_REJECTED,
@@ -1609,12 +1610,12 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
         final Map<String, Object> changes = loan.loanApplicationWithdrawnByApplicant(currentUser, command,
                 defaultLoanLifecycleStateMachine());
         if (!changes.isEmpty()) {
-            this.loanRepositoryWrapper.save(loan);
+            this.loanRepositoryWrapper.saveAndFlush(loan);
 
             final String noteText = command.stringValueOfParameterNamed("note");
             if (StringUtils.isNotBlank(noteText)) {
                 final Note note = Note.loanNote(loan, noteText);
-                this.noteRepository.save(note);
+                this.noteRepository.saveAndFlush(note);
             }
         }
 
@@ -1681,11 +1682,11 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
             List<LoanRepaymentScheduleInstallment> installments = loan.getRepaymentScheduleInstallments();
             for (LoanRepaymentScheduleInstallment installment : installments) {
                 if (installment.getId() == null) {
-                    this.repaymentScheduleInstallmentRepository.save(installment);
+                    this.repaymentScheduleInstallmentRepository.saveAndFlush(installment);
                 }
             }
             this.loanRepositoryWrapper.saveAndFlush(loan);
-        } catch (final DataIntegrityViolationException e) {
+        } catch (final JpaSystemException | DataIntegrityViolationException e) {
             final Throwable realCause = e.getCause();
             final List<ApiParameterError> dataValidationErrors = new ArrayList<>();
             final DataValidatorBuilder baseDataValidator = new DataValidatorBuilder(dataValidationErrors).resource("loan.application");

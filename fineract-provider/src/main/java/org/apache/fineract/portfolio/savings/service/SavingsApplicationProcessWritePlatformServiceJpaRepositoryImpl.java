@@ -213,7 +213,7 @@ public class SavingsApplicationProcessWritePlatformServiceJpaRepositoryImpl impl
             final AppUser submittedBy = this.context.authenticatedUser();
 
             final SavingsAccount account = this.savingAccountAssembler.assembleFrom(command, submittedBy);
-            this.savingAccountRepository.save(account);
+            this.savingAccountRepository.saveAndFlush(account);
             String accountNumber = "";
             GroupSavingsIndividualMonitoring gsimAccount = null;
             BigDecimal applicationId = BigDecimal.ZERO;
@@ -249,7 +249,7 @@ public class SavingsApplicationProcessWritePlatformServiceJpaRepositoryImpl impl
                                     Long.valueOf(1), true, SavingsAccountStatusType.SUBMITTED_AND_PENDING_APPROVAL.getValue(),
                                     applicationId);
                             account.setGsim(gsimAccount);
-                            this.savingAccountRepository.save(account);
+                            this.savingAccountRepository.saveAndFlush(account);
 
                         } else {
                             // Parent-empty table
@@ -258,7 +258,7 @@ public class SavingsApplicationProcessWritePlatformServiceJpaRepositoryImpl impl
                             gsimWritePlatformService.addGSIMAccountInfo(accountNumber, group, BigDecimal.ZERO, Long.valueOf(1), true,
                                     SavingsAccountStatusType.SUBMITTED_AND_PENDING_APPROVAL.getValue(), applicationId);
                             account.setGsim(gsimRepository.findOneByAccountNumber(accountNumber));
-                            this.savingAccountRepository.save(account);
+                            this.savingAccountRepository.saveAndFlush(account);
                         }
                     } else {
                         if (gsimRepository.count() != 0) {
@@ -268,7 +268,7 @@ public class SavingsApplicationProcessWritePlatformServiceJpaRepositoryImpl impl
                             account.updateAccountNo(accountNumber);
                             this.gsimWritePlatformService.incrementChildAccountCount(gsimAccount);
                             account.setGsim(gsimAccount);
-                            this.savingAccountRepository.save(account);
+                            this.savingAccountRepository.saveAndFlush(account);
 
                         } else {
                             // Child-empty table
@@ -279,7 +279,7 @@ public class SavingsApplicationProcessWritePlatformServiceJpaRepositoryImpl impl
                             gsimWritePlatformService.addGSIMAccountInfo(accountNumber, group, BigDecimal.ZERO, Long.valueOf(1), true,
                                     SavingsAccountStatusType.SUBMITTED_AND_PENDING_APPROVAL.getValue(), applicationId);
                             account.setGsim(gsimAccount);
-                            this.savingAccountRepository.save(account);
+                            this.savingAccountRepository.saveAndFlush(account);
                         }
                         // reset isAcceptingChild when processing last
                         // application of GSIM
@@ -329,7 +329,7 @@ public class SavingsApplicationProcessWritePlatformServiceJpaRepositoryImpl impl
             final AccountNumberFormat accountNumberFormat = this.accountNumberFormatRepository.findByAccountType(EntityAccountType.SAVINGS);
             account.updateAccountNo(this.accountNumberGenerator.generate(account, accountNumberFormat));
 
-            this.savingAccountRepository.save(account);
+            this.savingAccountRepository.saveAndFlush(account);
         }
     }
 
@@ -498,7 +498,7 @@ public class SavingsApplicationProcessWritePlatformServiceJpaRepositoryImpl impl
                 count++;
                 if (count == parentSavings.getChildAccountsCount()) {
                     parentSavings.setSavingsStatus(SavingsAccountStatusType.APPROVED.getValue());
-                    gsimRepository.save(parentSavings);
+                    gsimRepository.saveAndFlush(parentSavings);
                 }
             }
         }
@@ -522,13 +522,13 @@ public class SavingsApplicationProcessWritePlatformServiceJpaRepositoryImpl impl
 
         final Map<String, Object> changes = savingsAccount.approveApplication(currentUser, command, DateUtils.getLocalDateOfTenant());
         if (!changes.isEmpty()) {
-            this.savingAccountRepository.save(savingsAccount);
+            this.savingAccountRepository.saveAndFlush(savingsAccount);
 
             final String noteText = command.stringValueOfParameterNamed("note");
             if (StringUtils.isNotBlank(noteText)) {
                 final Note note = Note.savingNote(savingsAccount, noteText);
                 changes.put("note", noteText);
-                this.noteRepository.save(note);
+                this.noteRepository.saveAndFlush(note);
             }
         }
 
@@ -562,7 +562,7 @@ public class SavingsApplicationProcessWritePlatformServiceJpaRepositoryImpl impl
                 count++;
                 if (count == parentSavings.getChildAccountsCount()) {
                     parentSavings.setSavingsStatus(SavingsAccountStatusType.SUBMITTED_AND_PENDING_APPROVAL.getValue());
-                    gsimRepository.save(parentSavings);
+                    gsimRepository.saveAndFlush(parentSavings);
                 }
             }
 
@@ -584,13 +584,13 @@ public class SavingsApplicationProcessWritePlatformServiceJpaRepositoryImpl impl
 
         final Map<String, Object> changes = savingsAccount.undoApplicationApproval();
         if (!changes.isEmpty()) {
-            this.savingAccountRepository.save(savingsAccount);
+            this.savingAccountRepository.saveAndFlush(savingsAccount);
 
             final String noteText = command.stringValueOfParameterNamed("note");
             if (StringUtils.isNotBlank(noteText)) {
                 final Note note = Note.savingNote(savingsAccount, noteText);
                 changes.put("note", noteText);
-                this.noteRepository.save(note);
+                this.noteRepository.saveAndFlush(note);
             }
         }
 
@@ -622,7 +622,7 @@ public class SavingsApplicationProcessWritePlatformServiceJpaRepositoryImpl impl
                 count++;
                 if (count == parentSavings.getChildAccountsCount()) {
                     parentSavings.setSavingsStatus(SavingsAccountStatusType.REJECTED.getValue());
-                    gsimRepository.save(parentSavings);
+                    gsimRepository.saveAndFlush(parentSavings);
                 }
             }
         }
@@ -646,13 +646,13 @@ public class SavingsApplicationProcessWritePlatformServiceJpaRepositoryImpl impl
 
         final Map<String, Object> changes = savingsAccount.rejectApplication(currentUser, command, DateUtils.getLocalDateOfTenant());
         if (!changes.isEmpty()) {
-            this.savingAccountRepository.save(savingsAccount);
+            this.savingAccountRepository.saveAndFlush(savingsAccount);
 
             final String noteText = command.stringValueOfParameterNamed("note");
             if (StringUtils.isNotBlank(noteText)) {
                 final Note note = Note.savingNote(savingsAccount, noteText);
                 changes.put("note", noteText);
-                this.noteRepository.save(note);
+                this.noteRepository.saveAndFlush(note);
             }
         }
         this.businessEventNotifierService.notifyBusinessEventWasExecuted(BusinessEvents.SAVINGS_REJECT,
@@ -685,13 +685,13 @@ public class SavingsApplicationProcessWritePlatformServiceJpaRepositoryImpl impl
         final Map<String, Object> changes = savingsAccount.applicantWithdrawsFromApplication(currentUser, command,
                 DateUtils.getLocalDateOfTenant());
         if (!changes.isEmpty()) {
-            this.savingAccountRepository.save(savingsAccount);
+            this.savingAccountRepository.saveAndFlush(savingsAccount);
 
             final String noteText = command.stringValueOfParameterNamed("note");
             if (StringUtils.isNotBlank(noteText)) {
                 final Note note = Note.savingNote(savingsAccount, noteText);
                 changes.put("note", noteText);
-                this.noteRepository.save(note);
+                this.noteRepository.saveAndFlush(note);
             }
         }
 
@@ -740,11 +740,11 @@ public class SavingsApplicationProcessWritePlatformServiceJpaRepositoryImpl impl
         final Set<Long> existingReversedTransactionIds = new HashSet<>();
 
         if (amountForDeposit.isGreaterThanZero()) {
-            this.savingAccountRepository.save(account);
+            this.savingAccountRepository.saveAndFlush(account);
         }
         this.savingsAccountWritePlatformService.processPostActiveActions(account, savingsAccountDataDTO.getFmt(), existingTransactionIds,
                 existingReversedTransactionIds);
-        this.savingAccountRepository.save(account);
+        this.savingAccountRepository.saveAndFlush(account);
 
         generateAccountNumber(account);
         // post journal entries for activation charges

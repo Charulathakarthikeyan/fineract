@@ -59,6 +59,7 @@ import org.apache.fineract.portfolio.meeting.domain.MeetingRepositoryWrapper;
 import org.joda.time.LocalDate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.orm.jpa.JpaSystemException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -134,8 +135,9 @@ public class MeetingWritePlatformServiceJpaRepositoryImpl implements MeetingWrit
                     .withEntityId(newMeeting.getId()) //
                     .withGroupId(groupId).build();
 
-        } catch (final DataIntegrityViolationException dve) {
-            handleMeetingDataIntegrityIssues(meetingDate, dve);
+        } catch (final JpaSystemException | DataIntegrityViolationException e) {
+            final Throwable throwable = e.getMostSpecificCause();
+            handleMeetingDataIntegrityIssues(meetingDate, throwable);
             return new CommandProcessingResultBuilder() //
                     .build();
         }
@@ -255,11 +257,12 @@ public class MeetingWritePlatformServiceJpaRepositoryImpl implements MeetingWrit
             if (!changes.isEmpty()) {
                 this.meetingRepositoryWrapper.saveAndFlush(meetingForUpdate);
             }
-        } catch (final DataIntegrityViolationException dve) {
-            handleMeetingDataIntegrityIssues(meetingForUpdate.getMeetingDate(), dve);
-            return new CommandProcessingResultBuilder() //
-                    .build();
+        } catch (final JpaSystemException | DataIntegrityViolationException dve) {
+            final Throwable throwable = dve.getMostSpecificCause();
+            handleMeetingDataIntegrityIssues(meetingForUpdate.getMeetingDate(), throwable);
+            return new CommandProcessingResultBuilder().build();
         }
+
         final Long groupId = meetingForUpdate.isGroupEntity() ? meetingForUpdate.entityId() : null;
         return new CommandProcessingResultBuilder() //
                 .withEntityId(meetingForUpdate.getId()) //
@@ -294,8 +297,7 @@ public class MeetingWritePlatformServiceJpaRepositoryImpl implements MeetingWrit
                 .build();
     }
 
-    private void handleMeetingDataIntegrityIssues(final Date meetingDate, final DataIntegrityViolationException dve) {
-        final Throwable realCause = dve.getMostSpecificCause();
+    private void handleMeetingDataIntegrityIssues(final Date meetingDate, final Throwable realCause) {
         if (realCause.getMessage().contains("unique_calendar_instance_id_meeting_date")) {
             final LocalDate meetingDateLocal = LocalDate.fromDateFields(meetingDate);
             throw new PlatformDataIntegrityException("error.msg.meeting.duplicate",
@@ -336,8 +338,9 @@ public class MeetingWritePlatformServiceJpaRepositoryImpl implements MeetingWrit
             }
             // save meeting details
             this.meetingRepositoryWrapper.save(newMeeting);
-        } catch (final DataIntegrityViolationException dve) {
-            handleMeetingDataIntegrityIssues(meetingDate, dve);
+        } catch (final JpaSystemException | DataIntegrityViolationException dve) {
+            final Throwable throwable = dve.getMostSpecificCause();
+            handleMeetingDataIntegrityIssues(meetingDate, throwable);
         }
 
     }

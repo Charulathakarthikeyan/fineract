@@ -530,7 +530,7 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
         account.calculateInterestUsing(mc, today, isInterestTransfer, isSavingsInterestPostingAtCurrentPeriodEnd,
                 financialYearBeginningMonth, postInterestOnDate);
 
-        this.savingAccountRepositoryWrapper.save(account);
+        this.savingAccountRepositoryWrapper.saveAndFlush(account);
 
         return new CommandProcessingResultBuilder() //
                 .withEntityId(savingsId) //
@@ -836,7 +836,7 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
         if (StringUtils.isNotBlank(noteText)) {
             final Note note = Note.savingNote(account, noteText);
             changes.put("note", noteText);
-            this.noteRepository.save(note);
+            this.noteRepository.saveAndFlush(note);
         }
 
         return new CommandProcessingResultBuilder() //
@@ -870,7 +870,7 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
         if (StringUtils.isNotBlank(noteText)) {
             final Note note = Note.savingNote(account, noteText);
             changes.put("note", noteText);
-            this.noteRepository.save(note);
+            this.noteRepository.saveAndFlush(note);
         }
 
         return new CommandProcessingResultBuilder() //
@@ -904,7 +904,7 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
         if (StringUtils.isNotBlank(noteText)) {
             final Note note = Note.savingNote(account, noteText);
             changes.put("note", noteText);
-            this.noteRepository.save(note);
+            this.noteRepository.saveAndFlush(note);
         }
 
         return new CommandProcessingResultBuilder() //
@@ -947,7 +947,7 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
         if (StringUtils.isNotBlank(noteText)) {
             final Note note = Note.savingNote(account, noteText);
             changes.put("note", noteText);
-            this.noteRepository.save(note);
+            this.noteRepository.saveAndFlush(note);
         }
 
         return new CommandProcessingResultBuilder() //
@@ -985,7 +985,7 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
         savingsAccount.calculateInterestUsing(mc, transferDate, isInterestTransfer, isSavingsInterestPostingAtCurrentPeriodEnd,
                 financialYearBeginningMonth, postInterestOnDate);
 
-        this.savingsAccountTransactionRepository.save(newTransferTransaction);
+        this.savingsAccountTransactionRepository.saveAndFlush(newTransferTransaction);
         this.savingAccountRepositoryWrapper.saveAndFlush(savingsAccount);
 
         postJournalEntries(savingsAccount, existingTransactionIds, existingReversedTransactionIds);
@@ -1019,7 +1019,7 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
         savingsAccount.calculateInterestUsing(mc, transferDate, isInterestTransfer, isSavingsInterestPostingAtCurrentPeriodEnd,
                 financialYearBeginningMonth, postInterestOnDate);
 
-        this.savingsAccountTransactionRepository.save(withdrawtransferTransaction);
+        this.savingsAccountTransactionRepository.saveAndFlush(withdrawtransferTransaction);
         this.savingAccountRepositoryWrapper.saveAndFlush(savingsAccount);
 
         postJournalEntries(savingsAccount, existingTransactionIds, existingReversedTransactionIds);
@@ -1031,7 +1031,7 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
     public void rejectSavingsTransfer(final Long accountId, final DepositAccountType depositAccountType) {
         final SavingsAccount savingsAccount = this.depositAccountAssembler.assembleFrom(accountId, depositAccountType);
         savingsAccount.setStatus(SavingsAccountStatusType.TRANSFER_ON_HOLD.getValue());
-        this.savingAccountRepositoryWrapper.save(savingsAccount);
+        this.savingAccountRepositoryWrapper.saveAndFlush(savingsAccount);
     }
 
     @Override
@@ -1063,7 +1063,7 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
         savingsAccount.calculateInterestUsing(mc, transferDate, isInterestTransfer, isSavingsInterestPostingAtCurrentPeriodEnd,
                 financialYearBeginningMonth, postInterestOnDate);
 
-        this.savingsAccountTransactionRepository.save(acceptTransferTransaction);
+        this.savingsAccountTransactionRepository.saveAndFlush(acceptTransferTransaction);
         this.savingAccountRepositoryWrapper.saveAndFlush(savingsAccount);
 
         postJournalEntries(savingsAccount, existingTransactionIds, existingReversedTransactionIds);

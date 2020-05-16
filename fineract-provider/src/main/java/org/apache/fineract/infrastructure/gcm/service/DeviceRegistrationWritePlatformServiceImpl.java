@@ -18,6 +18,7 @@
  */
 package org.apache.fineract.infrastructure.gcm.service;
 
+import javax.persistence.EntityExistsException;
 import javax.persistence.PersistenceException;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.fineract.infrastructure.core.exception.PlatformDataIntegrityException;
@@ -27,9 +28,9 @@ import org.apache.fineract.infrastructure.gcm.domain.DeviceRegistrationRepositor
 import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
 import org.apache.fineract.portfolio.client.domain.Client;
 import org.apache.fineract.portfolio.client.domain.ClientRepositoryWrapper;
-import org.apache.openjpa.persistence.EntityExistsException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.orm.jpa.JpaSystemException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -60,7 +61,7 @@ public class DeviceRegistrationWritePlatformServiceImpl implements DeviceRegistr
         } catch (final EntityExistsException dve) {
             handleDataIntegrityIssues(registrationId, dve, dve);
             return null;
-        } catch (final DataIntegrityViolationException dve) {
+        } catch (final JpaSystemException | DataIntegrityViolationException dve) {
             handleDataIntegrityIssues(registrationId, dve.getMostSpecificCause(), dve);
             return null;
         } catch (final PersistenceException dve) {
